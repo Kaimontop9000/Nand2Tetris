@@ -89,7 +89,7 @@ char addText[]=	"@SP\n"
 				"@SP\n"
 				"M=M-1\n"
 				"A=M\n"
-				"D=M+D\n"
+				"D=D+M\n"
 				"@SP\n"
 				"A=M\n"
 				"M=D\n"
@@ -223,6 +223,7 @@ void advance(char line_name[],char current_command_line[]){
 	current_command_line[0] = '\0';
 	strcpy(current_command_line, line_name);{
 	current_command_line[strcspn(current_command_line, "\n")] = 0;
+	current_command_line[strcspn(current_command_line, "\r")] = 0;
 	}
 }
 //-------------------------------------------------------------------------------
@@ -408,7 +409,7 @@ int main(int argc,const char *argv[]) {
    
     while(hasMoreLines(input_file,line)){
     	advance(line,current_command);
-    	if(commandType(current_command)== C_ARITHMETIC){
+    	if((commandType(current_command) == C_ARITHMETIC)){
     		writeArithmetic(current_command);
     	}else if(commandType(current_command)== C_PUSH){
     		arg1(current_command, arg1_string);
