@@ -89,7 +89,7 @@ char addText[]=	"@SP\n"
 				"@SP\n"
 				"M=M-1\n"
 				"A=M\n"
-				"D=M+D\n"
+				"D=D+M\n"
 				"@SP\n"
 				"A=M\n"
 				"M=D\n"
@@ -117,44 +117,91 @@ char negText[]="@SP\n"
 				"@SP\n"
 				"M=M+1\n";
 
-char eqText[]=  "@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=M\n"
-				"@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=D-M\n"
-				"M=D\n"
-				"@SP\n"
-				"M=M+1\n"
-				"D;JEQ\n";
+int labelCount = 0;
 
-char gtText[]= "@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=M\n"
-				"@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=D-M\n"
-				"M=D\n"
-				"@SP\n"
-				"M=M+1\n"
-				"D;JGT\n";
+void writeEq(FILE* out) {
+    fprintf(out,
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M\n"
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M-D\n"
+        "@EQ_TRUE%d\n"
+        "D;JEQ\n"
+        "@SP\n"
+        "A=M\n"
+        "M=0\n"
+        "@EQ_CONTINUE%d\n"
+        "0;JMP\n"
+        "(EQ_TRUE%d)\n"
+        "@SP\n"
+        "A=M\n"
+        "M=-1\n"
+        "(EQ_CONTINUE%d)\n"
+        "@SP\n"
+        "M=M+1\n",
+        labelCount, labelCount, labelCount, labelCount);
+    labelCount++;
+}
 
-char ltText[]= "@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=M\n"
-				"@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=D-M\n"
-				"M=D\n"
-				"@SP\n"
-				"M=M+1\n"
-				"D;JLT\n";	
+void writeGt(FILE* out) {
+    fprintf(out,
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M\n"
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M-D\n"
+        "@GT_TRUE%d\n"
+        "D;JGT\n"
+        "@SP\n"
+        "A=M\n"
+        "M=0\n"
+        "@GT_CONTINUE%d\n"
+        "0;JMP\n"
+        "(GT_TRUE%d)\n"
+        "@SP\n"
+        "A=M\n"
+        "M=-1\n"
+        "(GT_CONTINUE%d)\n"
+        "@SP\n"
+        "M=M+1\n",
+        labelCount, labelCount, labelCount, labelCount);
+    labelCount++;
+}
+
+void writeLt(FILE* out) {
+    fprintf(out,
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M\n"
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M-D\n"
+        "@LT_TRUE%d\n"
+        "D;JLT\n"
+        "@SP\n"
+        "A=M\n"
+        "M=0\n"
+        "@LT_CONTINUE%d\n"
+        "0;JMP\n"
+        "(LT_TRUE%d)\n"
+        "@SP\n"
+        "A=M\n"
+        "M=-1\n"
+        "(LT_CONTINUE%d)\n"
+        "@SP\n"
+        "M=M+1\n",
+        labelCount, labelCount, labelCount, labelCount);
+    labelCount++;
+}
 
 char andText[]= "@SP\n"
 				"M=M-1\n"
@@ -171,8 +218,8 @@ char orText[]= 	"@SP\n"
 				"M=M-1\n"
 				"A=M\n"
 				"D=M\n"
-				"@Sp\n"
-				"M=m-1\n"
+				"@SP\n"
+				"M=M-1\n"
 				"A=M\n"
 				"M=D|M\n"
 				"@SP\n"
@@ -223,6 +270,7 @@ void advance(char line_name[],char current_command_line[]){
 	current_command_line[0] = '\0';
 	strcpy(current_command_line, line_name);{
 	current_command_line[strcspn(current_command_line, "\n")] = 0;
+	current_command_line[strcspn(current_command_line, "\r")] = 0;
 	}
 }
 //-------------------------------------------------------------------------------
@@ -264,22 +312,25 @@ if(strcmp(current_command_line,"add") == 0 || strcmp(current_command_line,"sub")
 	}else if(strstr(current_command_line,"constant")){
 		strcpy(arg1,"constant");
 		return arg1;
+	}else if(strstr(current_command_line,"static")){
+		strcpy(arg1,"static");
+		return arg1;
 	}else if(strstr(current_command_line,"local")){
 		strcpy(arg1,"local");
 		return arg1;
-	}else if(strstr(current_command_line,"arguement")){
-		strcpy(arg1,"arguement");
+	}else if(strstr(current_command_line,"argument")){
+		strcpy(arg1,"argument");
 		return arg1;
 	}else if(strstr(current_command_line,"this")){
 		strcpy(arg1,"this");
 		return arg1;
-	}else if(strcpy(current_command_line,"that")){
+	}else if(strstr(current_command_line,"that")){
 		strcpy(arg1,"that");
 		return arg1;
-	}else if(strcpy(current_command_line,"temp")){
+	}else if(strstr(current_command_line,"temp")){
 		strcpy(arg1,"temp");
 		return arg1;
-	}else if(strcpy(current_command_line,"pointer")){
+	}else if(strstr(current_command_line,"pointer")){
 		strcpy(arg1,"pointer");
 		return arg1;
 	}
@@ -287,7 +338,7 @@ if(strcmp(current_command_line,"add") == 0 || strcmp(current_command_line,"sub")
 //Parser Routine-arg2
 //-----------------------------------------------------------
 int arg2(char current_command_line[],char arg2_v[],int arg2_integer){
-int i;
+/*int i;
 int j = 0;
 for(i = 0; i<BUFFER_SIZE; i++) {
 	if(isdigit(current_command_line[i])){
@@ -297,28 +348,37 @@ for(i = 0; i<BUFFER_SIZE; i++) {
 }
 arg2_integer = atoi(arg2_v);
 return arg2_integer;
+}*/ int i = 0, j = 0;
+while (current_command_line[i]) {
+    if (isdigit(current_command_line[i])) {
+        arg2_v[j++] = current_command_line[i];
+    }
+    i++;
+}
+arg2_v[j] = '\0';
+return atoi(arg2_v);
 }
 //-----------------------------------------------------------------------
 //CodeWriter writeArithmetic
 //-----------------------------------------------------------------------
 void writeArithmetic(char command[]){
-	if(strcmp(command,"add")){
+	if(strcmp(command,"add") == 0){
 		fprintf(output_file, "%s",addText);
-	}else if(strcmp(command,"sub")){
+	}else if(strcmp(command,"sub")==0){
 		fprintf(output_file,"%s", subText);
-	}else if(strcmp(command,"neg")){
+	}else if(strcmp(command,"neg")==0){
 		fprintf(output_file,"%s",negText);
-	}else if(strcmp(command,"eq")){
-		fprintf(output_file,"%s",eqText);
-	}else if(strcmp(command,"gt")){
-		fprintf(output_file,"%s",gtText);
-	}else if(strcmp(command,"lt")){
-		fprintf(output_file,"%s",ltText);
-	}else if(strcmp(command,"and")){
+	} else if (strcmp(command, "eq") == 0) {
+        writeEq(output_file);
+    } else if (strcmp(command, "gt") == 0) {
+        writeGt(output_file);
+    } else if (strcmp(command, "lt") == 0) {
+        writeLt(output_file);
+	}else if(strcmp(command,"and")==0){
 		fprintf(output_file,"%s",andText);
-	}else if(strcmp(command,"or")){
+	}else if(strcmp(command,"or")==0){
 		fprintf(output_file,"%s",orText);
-	}else if(strcmp(command,"not")){
+	}else if(strcmp(command,"not")==0){
 		fprintf(output_file,"%s",notText);
 	}
 }
@@ -327,31 +387,339 @@ void writeArithmetic(char command[]){
 //------------------------------------------------------------------------
 void writePushPop(int command, char argue1[], char argue2[])
 {
-	if(command == C_PUSH && (strcmp(argue1,"constant") != 0)){
+	if(command == C_PUSH && (strcmp(argue1,"this") == 0)){
 		pushText[0] = '\0';
-		sprintf(pushText, "@%s\n", argue1);
-		strcat(pushText,"A=D\n");
-		char temp[BUFFER_SIZE];
-		sprintf(temp, "%s\n",argue2);
-		strcat(pushText,temp);
-		strcat(pushText,"D=A+D\n");
+		sprintf(pushText,"@%s\n",argue2);
+		strcat(pushText,"D=A\n");
+		strcat(pushText,"@THIS\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"A=D+A\n");
+		strcat(pushText,"D=M\n");
 		strcat(pushText,"@SP\n");
 		strcat(pushText,"A=M\n");
 		strcat(pushText,"M=D\n");
 		strcat(pushText,"@SP\n");
 		strcat(pushText,"M=M+1\n");		
+		
+
+		fprintf(output_file,"%s", pushText); //should be correct
+
+	}else if(command == C_PUSH && (strcmp(argue1,"local") == 0)){
+		pushText[0] = '\0';
+
+		sprintf(pushText,"@%s\n",argue2);
+		strcat(pushText,"D=A\n");
+		strcat(pushText,"@LCL\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"A=D+A\n");
+		strcat(pushText,"D=M\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"M=D\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"M=M+1\n");		
+
 		fprintf(output_file,"%s", pushText);
 
-	}else if(command == C_POP){
+
+	}else if(command == C_PUSH && (strcmp(argue1,"argument") == 0)){
+		pushText[0] = '\0';
+
+		sprintf(pushText,"@%s\n",argue2);
+		strcat(pushText,"D=A\n");
+		strcat(pushText,"@ARG\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"A=D+A\n");
+		strcat(pushText,"D=M\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"M=D\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"M=M+1\n");		
+
+		fprintf(output_file,"%s", pushText);
+
+	}else if(command == C_PUSH && (strcmp(argue1,"static") == 0)){
+		pushText[0] = '\0';
+
+		sprintf(pushText,"@%s\n",argue2);
+		strcat(pushText,"D=A\n");
+		strcat(pushText,"@STATIC\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"A=D+A\n");
+		strcat(pushText,"D=M\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"M=D\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"M=M+1\n");		
+
+		fprintf(output_file,"%s", pushText);
+
+
+	}else if(command == C_PUSH && (strcmp(argue1,"temp") == 0)){
+		pushText[0] = '\0';
+
+		sprintf(pushText,"@%s\n",argue2);
+		strcat(pushText,"D=A\n");
+		strcat(pushText,"@5\n");
+		strcat(pushText,"A=D+A\n");
+		strcat(pushText,"D=M\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"M=D\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"M=M+1\n");		
+
+		fprintf(output_file,"%s", pushText);
+
+	}else if(command == C_PUSH && (strcmp(argue1,"that") == 0)){
+		pushText[0] = '\0';
+
+		sprintf(pushText,"@%s\n",argue2);
+		strcat(pushText,"D=A\n");
+		strcat(pushText,"@THAT\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"A=D+A\n");
+		strcat(pushText,"D=M\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"M=D\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"M=M+1\n");		
+
+		fprintf(output_file,"%s", pushText);
+
+	}else if(command == C_PUSH && strcmp(argue1,"pointer") == 0 && (strcmp(argue2,"0") == 0)){
+		pushText[0] = '\0';
+		sprintf(pushText, "@3\n");
+		strcat(pushText,"D=M\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"M=D\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"M=M+1\n");		
+		fprintf(output_file,"%s", pushText); //i think its ok
+
+	}else if(command == C_PUSH && (strcmp(argue1,"pointer") == 0) && (strcmp(argue2,"1") == 0)){
+		pushText[0] = '\0';
+		sprintf(pushText, "@4\n");
+		strcat(pushText,"D=M\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"A=M\n");
+		strcat(pushText,"M=D\n");
+		strcat(pushText,"@SP\n");
+		strcat(pushText,"M=M+1\n");		
+		fprintf(output_file,"%s", pushText); //i think its ok
+	
+	}else if(command == C_POP && strcmp(argue1,"pointer") == 0 && (strcmp(argue2,"0") == 0)){
 		popText[0] = '\0';
 		strcat(popText,"@SP\n");
 		strcat(popText,"M=M-1\n");
-		sprintf(popText,"@%s\n", argue2);
-		strcat(popText,"D=A\n");
+		strcat(popText,"A=M\n");
+		strcat(popText,"D=M\n");
+		strcat(popText,"@3\n");
+		strcat(popText,"M=D\n");
+	
+		fprintf(output_file,"%s", popText);
+
+	}else if(command == C_POP && (strcmp(argue1,"pointer") == 0 && (strcmp(argue2,"1") == 0))){
+		popText[0] = '\0';
+		strcat(popText,"@SP\n");
+		strcat(popText,"M=M-1\n");
+		strcat(popText,"A=M\n");
+		strcat(popText,"D=M\n");
+		strcat(popText,"@4\n");
+		strcat(popText,"M=D\n");
+	
+
+		fprintf(output_file,"%s", popText);
+
+	}else if(command == C_POP && strcmp(argue1, "this") == 0){
+    	popText[0] = '\0';
+
+   		 strcat(popText, "@");
+   		 strcat(popText, argue2);       
+	    strcat(popText, "\nD=A\n");
+
+	    strcat(popText, "@THIS\n");       
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=D+A\n");     
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "M=D\n");       
+
+	    strcat(popText, "@SP\n");
+	    strcat(popText, "M=M-1\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=M\n");       
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "M=D\n");	
+
+	    strcat(popText, "@R13\n");
+		strcat(popText, "M=0\n");
+
+
+	    fprintf(output_file, "%s", popText);
+
+	}else if(command == C_POP && strcmp(argue1, "local") == 0){
+    	popText[0] = '\0';
+
+   		 strcat(popText, "@");
+   		 strcat(popText, argue2);       
+	    strcat(popText, "\nD=A\n");
+
+	    strcat(popText, "@LCL\n");       
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=D+A\n");     
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "M=D\n");       
+
+	    strcat(popText, "@SP\n");
+	    strcat(popText, "M=M-1\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=M\n");       
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "M=D\n");	
+
+	    strcat(popText, "@R13\n");
+		strcat(popText, "M=0\n");
+
+
+	    fprintf(output_file, "%s", popText);
+
+	}else if(command == C_POP && strcmp(argue1, "static") == 0){
+    	popText[0] = '\0';
+
+   		strcat(popText, "@");
+   		strcat(popText, argue2);       
+	    strcat(popText, "\nD=A\n");
+
+	    strcat(popText, "@STATIC\n");       
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=D+A\n");     
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "M=D\n");       
+
+	    strcat(popText, "@SP\n");
+	    strcat(popText, "M=M-1\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=M\n");       
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "M=D\n");	
+
+	    strcat(popText, "@R13\n");
+		strcat(popText, "M=0\n");
+
+
+	    fprintf(output_file, "%s", popText);
+
+	}else if(command == C_POP && strcmp(argue1, "argument") == 0){
+    	popText[0] = '\0';
+
+   		 strcat(popText, "@");
+   		 strcat(popText, argue2);       
+	    strcat(popText, "\nD=A\n");
+
+	    strcat(popText, "@ARG\n");       
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=D+A\n");     
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "M=D\n");       
+
+	    strcat(popText, "@SP\n");
+	    strcat(popText, "M=M-1\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=M\n");       
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "M=D\n");	
+
+	    strcat(popText, "@R13\n");
+		strcat(popText, "M=0\n");
+
+
+	    fprintf(output_file, "%s", popText);
+
+	}else if(command == C_POP && strcmp(argue1, "temp") == 0){
+    	popText[0] = '\0';
+
+   		strcat(popText, "@");
+   		strcat(popText, argue2);       
+	    strcat(popText, "\nD=A\n");
+
+	    strcat(popText, "@5\n");       
+	    strcat(popText, "D=D+A\n");     
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "M=D\n");       
+
+	    strcat(popText, "@SP\n");
+	    strcat(popText, "M=M-1\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=M\n");       
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "M=D\n");	
+
+	    strcat(popText, "@R13\n");
+		strcat(popText, "M=0\n");
+
+
+	    fprintf(output_file, "%s", popText);
+
+	}else if(command == C_POP && strcmp(argue1, "that") == 0){
+    	popText[0] = '\0';
+
+   		 strcat(popText, "@");
+   		 strcat(popText, argue2);       
+	    strcat(popText, "\nD=A\n");
+
+	    strcat(popText, "@THAT\n");       
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=D+A\n");     
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "M=D\n");       
+
+	    strcat(popText, "@SP\n");
+	    strcat(popText, "M=M-1\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "D=M\n");       
+
+	    strcat(popText, "@R13\n");
+	    strcat(popText, "A=M\n");
+	    strcat(popText, "M=D\n");	
+
+	    strcat(popText, "@R13\n");
+		strcat(popText, "M=0\n");
+
+
+	    fprintf(output_file, "%s", popText);
+	}
+	else if(command == C_POP){
+		popText[0] = '\0';
 		char temp[BUFFER_SIZE];
+		strcat(popText,"@SP\n");
+		strcat(popText,"M=M-1\n");
+		sprintf(temp,"@%s\n", argue2);
+		strcat(popText,temp);
+		strcat(popText,"D=A\n");
+		temp[0] = '\0';
 		sprintf(temp,"@%s\n", argue1);
 		strcat(popText,temp);
-		strcat(popText,"D=A+D\n");	
+		strcat(popText,"D=D+A\n");	
 		strcat(popText,"@R13\n");
 		strcat(popText,"M=D\n");
 		strcat(popText,"@SP\n");
@@ -365,16 +733,16 @@ void writePushPop(int command, char argue1[], char argue2[])
 	if (command == C_PUSH && (strcmp(argue1,"constant") == 0)){
 		pushText[0] = '\0';
 		sprintf(pushText, "@%s\n", argue2);
-		strcat(pushText,"A=D\n");
+		strcat(pushText,"D=A\n");
 		strcat(pushText,"@SP\n");
 		strcat(pushText,"A=M\n");
 		strcat(pushText,"M=D\n");
 		strcat(pushText,"@SP\n");
 		strcat(pushText,"M=M+1\n");		
-		fprintf(output_file,"%s", pushText);
+		fprintf(output_file,"%s", pushText); //should be correct for push constant 
 	}
 }
-//might have to add logic for constant, if segment is constant then arg1 needs to be looked at
+
 //---------------------------------------------------------------------------------------------
 //CodeWriter-close
 //---------------------------------------------------------------------------------------------
@@ -399,11 +767,15 @@ int main(int argc,const char *argv[]) {
    
     while(hasMoreLines(input_file,line)){
     	advance(line,current_command);
-    	if(commandType(current_command)== C_ARITHMETIC){
+    	if((commandType(current_command) == C_ARITHMETIC)){
     		writeArithmetic(current_command);
     	}else if(commandType(current_command)== C_PUSH){
+    		arg1(current_command, arg1_string);
+			int index = arg2(current_command, arg2_value, 0);
     		writePushPop(C_PUSH,arg1_string,arg2_value);
     	}else if(commandType(current_command)== C_POP){
+    		arg1(current_command, arg1_string);
+			int index = arg2(current_command, arg2_value, 0);
    			writePushPop(C_POP,arg1_string,arg2_value);
    		}
    	}
