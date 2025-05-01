@@ -117,76 +117,91 @@ char negText[]="@SP\n"
 				"@SP\n"
 				"M=M+1\n";
 
-char eqText[]=  "@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=M\n"
-				"@SP\n"
-				"A=M\n"
-				"M=M-1\n"
-				"D=M-D\n"
-				"@EQ_LABEL\n"
-				"D;JEQ\n"
-				"@SP\n"
-				"A=M\n"
-				"M=0\n"
-				"@CONTINUE0\n"
-				"0;JMP\n"
-				"(EQ_LABEL)\n"
-				"@SP\n"
-				"A=M\n"
-				"M=-1\n"
-				"(CONTINUE0)\n"
-				"@SP\n"
-				"M=M+1\n";
+int labelCount = 0;
 
-char gtText[]= "@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=M\n"
-				"@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=M-D\n"
-				"@GT_LABEL\n"
-				"D;JGT\n"
-				"@SP\n"
-				"A=M\n"
-				"M=0\n"
-				"@CONTINUE1\n"
-				"0;JMP\n"
-				"(GT_LABEL)\n"
-				"@SP\n"
-				"A=M\n"
-				"M=-1\n"
-				"(CONTINUE1)\n"
-				"@SP\n"
-				"M=M+1\n";
-				
+void writeEq(FILE* out) {
+    fprintf(out,
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M\n"
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M-D\n"
+        "@EQ_TRUE%d\n"
+        "D;JEQ\n"
+        "@SP\n"
+        "A=M\n"
+        "M=0\n"
+        "@EQ_CONTINUE%d\n"
+        "0;JMP\n"
+        "(EQ_TRUE%d)\n"
+        "@SP\n"
+        "A=M\n"
+        "M=-1\n"
+        "(EQ_CONTINUE%d)\n"
+        "@SP\n"
+        "M=M+1\n",
+        labelCount, labelCount, labelCount, labelCount);
+    labelCount++;
+}
 
-char ltText[]= "@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=M\n"
-				"@SP\n"
-				"M=M-1\n"
-				"A=M\n"
-				"D=M-D\n"
-				"@LT_LABEL\n"
-				"D;JLT\n"
-				"@SP\n"
-				"A=M\n"
-				"M=0\n"
-				"@CONTINUE2\n"
-				"0;JMP\n"
-				"(LT_LABEL)\n"
-				"@SP\n"
-				"A=M\n"
-				"M=-1\n"
-				"(CONTINUE2)\n"
-				"@SP\n"
-				"M=M+1\n";
-				
+void writeGt(FILE* out) {
+    fprintf(out,
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M\n"
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M-D\n"
+        "@GT_TRUE%d\n"
+        "D;JGT\n"
+        "@SP\n"
+        "A=M\n"
+        "M=0\n"
+        "@GT_CONTINUE%d\n"
+        "0;JMP\n"
+        "(GT_TRUE%d)\n"
+        "@SP\n"
+        "A=M\n"
+        "M=-1\n"
+        "(GT_CONTINUE%d)\n"
+        "@SP\n"
+        "M=M+1\n",
+        labelCount, labelCount, labelCount, labelCount);
+    labelCount++;
+}
+
+void writeLt(FILE* out) {
+    fprintf(out,
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M\n"
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M-D\n"
+        "@LT_TRUE%d\n"
+        "D;JLT\n"
+        "@SP\n"
+        "A=M\n"
+        "M=0\n"
+        "@LT_CONTINUE%d\n"
+        "0;JMP\n"
+        "(LT_TRUE%d)\n"
+        "@SP\n"
+        "A=M\n"
+        "M=-1\n"
+        "(LT_CONTINUE%d)\n"
+        "@SP\n"
+        "M=M+1\n",
+        labelCount, labelCount, labelCount, labelCount);
+    labelCount++;
+}
 
 char andText[]= "@SP\n"
 				"M=M-1\n"
@@ -350,12 +365,12 @@ void writeArithmetic(char command[]){
 		fprintf(output_file,"%s", subText);
 	}else if(strcmp(command,"neg")==0){
 		fprintf(output_file,"%s",negText);
-	}else if(strcmp(command,"eq")==0){
-		fprintf(output_file,"%s",eqText);
-	}else if(strcmp(command,"gt")==0){
-		fprintf(output_file,"%s",gtText);
-	}else if(strcmp(command,"lt")==0){
-		fprintf(output_file,"%s",ltText);
+	} else if (strcmp(command, "eq") == 0) {
+        writeEq(output_file);
+    } else if (strcmp(command, "gt") == 0) {
+        writeGt(output_file);
+    } else if (strcmp(command, "lt") == 0) {
+        writeLt(output_file);
 	}else if(strcmp(command,"and")==0){
 		fprintf(output_file,"%s",andText);
 	}else if(strcmp(command,"or")==0){
