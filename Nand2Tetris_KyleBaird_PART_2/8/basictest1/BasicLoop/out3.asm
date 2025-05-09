@@ -21,6 +21,7 @@ A=M
 M=D
 @R13
 M=0
+(LOOP)
 @0
 D=A
 @ARG
@@ -130,6 +131,13 @@ A=M
 M=D
 @SP
 M=M+1
+@SP
+M=M-1
+@SP
+A=M
+D=M
+@LOOP
+D;JGT
 @0
 D=A
 @LCL

@@ -786,24 +786,23 @@ void writePushPop(int command, char argue1[], char argue2[])
 void writeLabel(char command[]){
 	char temp[BUFFER_SIZE];
 
-char *underscore = strchr(command, '_');
-if(underscore){
-	strcpy(temp, underscore+1);
+char *label = command+5;
+
+	strcpy(temp, label);
 
 	fprintf(output_file,"(");
 	fprintf(output_file,"%s", temp);
 	fprintf(output_file,")\n");
-	}
-} //THERE WAS never an UNDERSCORE, HAVE TO TAKE FROM labelNAME and extract just the name part
+	
+} 
 //---------------------------------------------------------------------------------------------
 //CodeWriter- writeIf
 //---------------------------------------------------------------------------------------------
 	void writeIf(char command[]){
 		char temp[BUFFER_SIZE];
 
-	char *space = strchr(command, ' ');
-	if(space){
-		strcpy(temp, space+1);
+	char *label = command+7;
+	
 		ifText[0] = '\0';
 
 		strcat(ifText,"@SP\n");
@@ -811,13 +810,13 @@ if(underscore){
 		strcat(ifText,"@SP\n");
 		strcat(ifText,"A=M\n");
 		strcat(ifText,"D=M\n");
-		strcat(ifText,"@SP\n");
-		strcat(ifText,"M=M-1\n");
-		strcat(ifText,temp);
+		//strcat(ifText,"@SP\n"); perhaps ifgoto is supposed to consume its previoulsy pushed value.
+		//strcat(ifText,"M=M+1\n");
+		strcat(ifText,"@");
+		strcat(ifText,label);
 		strcat(ifText,"\nD;JGT\n");
 		fprintf(output_file,"%s", ifText);
-	}
-} //NOW THERE IS NO ' ' DUE TO REMOVE WHITE SPACES. REDO
+}
 //---------------------------------------------------------------------------------------------
 //CodeWriter-close
 //---------------------------------------------------------------------------------------------
