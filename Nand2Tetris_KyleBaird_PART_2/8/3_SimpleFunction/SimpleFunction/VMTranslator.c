@@ -69,6 +69,9 @@ CodeWriter 																				|
 |				|string),nArgs	|				|the function command 					|
 |				|(int)			|				|										|
 ----------------------------------------------------------------------------------------|
+|writeReturn	|None 			|None 			|Writes assembly code that effects the  |
+|				|				|				|function return command 				|
+----------------------------------------------------------------------------------------|
 |close			|None			|None			|Close the output file/stream			|
 ----------------------------------------------------------------------------------------|*/ 
 #include <stdio.h>
@@ -318,7 +321,8 @@ int commandType(char current_command_line[]){
 	char temp_label[BUFFER_SIZE];
 	char temp_if[BUFFER_SIZE];
 	char temp_Goto[BUFFER_SIZE];
-	char temp_Function[BUFFER_SIZE];
+	char temp_Function[BUFFER_SIZE]; 
+	char temp_Return[BUFFER_SIZE];
 
 	strcpy(temp_push,current_command_line);
 	temp_push[4] = '\0';
@@ -338,6 +342,8 @@ int commandType(char current_command_line[]){
 	strcpy(temp_Function,current_command_line);
 	temp_Function[8] = '\0';
 
+	strcpy(temp_Return,current_command_line);
+
 	if(strcmp(current_command_line,"add") == 0 || strcmp(current_command_line,"sub")==0
 	||strcmp(current_command_line,"neg")==0 || strcmp(current_command_line,"eq")==0
 	||strcmp(current_command_line,"gt")==0||strcmp(current_command_line,"lt")==0
@@ -356,6 +362,8 @@ int commandType(char current_command_line[]){
 		return C_GOTO;
 	}else if(strcmp(temp_Function,"function")==0){
 		return C_FUNCTION;
+	}else if(strcmp(temp_Return,"return")==0){
+		return C_RETURN;
 	}else{
 		return INVALID_COMMAND;
 	}
@@ -889,12 +897,98 @@ void writeFunction(char command[]){
     strcat(functionText,"(");
     strcat(functionText,function);
     strcat(functionText,")\n");
+    fprintf(output_file,"%s",functionText);
 
-    for(int i; i < nNum; i++){
-    	strcat(functionText,"push 0\n");
+    for(int i=0; i < nNum; i++){
+    	char push0[BUFFER_SIZE];
+
+    	strcpy(push0,"@0\n");
+		strcat(push0,"D=A\n");
+		strcat(push0,"@SP\n");
+		strcat(push0,"A=M\n");
+		strcat(push0,"M=D\n");
+		strcat(push0,"@SP\n");
+		strcat(push0,"M=M+1\n");
+		fprintf(output_file,"%s",push0);
     }
+}
+//---------------------------------------------------------------------------------------------
+//CodeWriter-writeReturn
+//---------------------------------------------------------------------------------------------
+void writeReturn(){
+	char returnText[1000];
 
+	strcpy(returnText,"@LCL\n"); 	//FRAME = LOCAL
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@R13\n");
+	strcat(returnText,"M=D\n");
 
+	strcat(returnText,"@5\n"); 		//retAdress = *(frame-5)
+	strcat(returnText,"D=A\n");
+	strcat(returnText,"@R13\n");
+	strcat(returnText,"D=M-D\n");
+	strcat(returnText,"A=D\n");
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@R14\n");
+	strcat(returnText,"M=D\n");
+
+	strcat(returnText,"@ARG\n");	//*Arg = pop()
+	strcat(returnText,"A=M\n");
+	strcat(returnText,"D=A\n");
+	strcat(returnText,"@R15\n");
+	strcat(returnText,"M=D\n");
+	strcat(returnText,"@SP\n");
+	strcat(returnText,"M=M-1\n");
+	strcat(returnText,"A=M\n");
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@15\n");
+	strcat(returnText,"A=M\n");
+	strcat(returnText,"M=D\n");
+
+	strcat(returnText,"@ARG\n");	//SP = Arg + 1
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@1\n");
+	strcat(returnText,"D=D+A\n");
+	strcat(returnText,"@SP\n");
+	strcat(returnText,"M=D\n");
+
+	strcat(returnText,"@R13\n"); 	//THAT = *(frame-1)
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@1\n");
+	strcat(returnText,"A=D-A\n");
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@THAT\n");
+	strcat(returnText,"M=D\n");
+
+	strcat(returnText,"@R13\n"); 	//THIS = *(frame-2)
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@2\n");
+	strcat(returnText,"A=D-A\n");
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@THIS\n");
+	strcat(returnText,"M=D\n");
+
+	strcat(returnText,"@R13\n"); 	//ARG = *(frame-3)
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@3\n");
+	strcat(returnText,"A=D-A\n");
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@ARG\n");
+	strcat(returnText,"M=D\n");
+
+	strcat(returnText,"@R13\n"); 	//LCL = *(frame-4)
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@4\n");
+	strcat(returnText,"A=D-A\n");
+	strcat(returnText,"D=M\n");
+	strcat(returnText,"@LCL\n");
+	strcat(returnText,"M=D\n");
+
+	strcat(returnText,"@14\n"); 	//goto retAddr
+	strcat(returnText,"A=M\n");
+	strcat(returnText,"0;JMP\n");
+
+	fprintf(output_file,"%s",returnText);
 }
 //---------------------------------------------------------------------------------------------
 //CodeWriter-close
@@ -941,6 +1035,8 @@ int main(int argc,const char *argv[]) {
    			writeGoto(current_command);
    		}else if(commandType(current_command)==C_FUNCTION){
    			writeFunction(current_command);
+   		}else if(commandType(current_command)==C_RETURN){
+   			writeReturn();
    		}else printf("failed\n");
    	}	
 
