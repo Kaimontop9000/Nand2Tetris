@@ -68,6 +68,10 @@ CodeWriter 																				|
 |writeFunction	|functionName(	|None 			|Writes assembly code that effects		|
 |				|string),nArgs	|				|the function command 					|
 |				|(int)			|				|										|
+|---------------|---------------|---------------|---------------------------------------|
+|writeCall      |functionName	|None			|Writes assembly code that effects the  |
+|				|(string),nArgs |				|call command							|
+|				|(int)			|				|										|
 ----------------------------------------------------------------------------------------|
 |writeReturn	|None 			|None 			|Writes assembly code that effects the  |
 |				|				|				|function return command 				|
@@ -78,6 +82,10 @@ CodeWriter 																				|
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <dirent.h>
 
 #define BUFFER_SIZE 100//USED TO HOLD THE BUFFER FROM FILE INPUT TO FILE OUTPUT
 char line[BUFFER_SIZE];	//THE INITIAL LINE FROM FILE INPUT IS READ INTO THIS LINE
@@ -86,6 +94,7 @@ char arg1_string[BUFFER_SIZE]; //used in the arg1 function
 char arg2_value[BUFFER_SIZE];					//used in the arg2 function
 int arg2_int;
 char currentFileName[BUFFER_SIZE];
+char currentFunction[BUFFER_SIZE] = "";
 
 #define C_ARITHMETIC 0 //arithmetic/logical
 #define C_PUSH 1
@@ -303,9 +312,13 @@ void removeWhitespace(char *str) {
 int hasMoreLines(FILE *input_filename, char line_name[]){
 	while(fgets(line_name, BUFFER_SIZE, input_filename)) {
 		removeComment(line_name);
-        removeWhitespace(line_name);
+        
+        if (strlen(line_name) == 0) {
+        // empty line or comment-only, skip
+        continue;
+        }
 		return 1;
-		//line_name[strcspn(line_name, "\n")] = 0;
+		line[strcspn(line, "\r\n")] = '\0';
 	}
 	return 0;
 }
@@ -320,58 +333,40 @@ void advance(char line_name[],char current_command_line[]){
 }
 //-------------------------------------------------------------------------------
 //Parser Routine-CommandType
-int commandType(char current_command_line[]){
-	char temp_push[BUFFER_SIZE]; 
-	char temp_pop[BUFFER_SIZE];
-	char temp_label[BUFFER_SIZE];
-	char temp_if[BUFFER_SIZE];
-	char temp_Goto[BUFFER_SIZE];
-	char temp_Function[BUFFER_SIZE]; 
-	char temp_Return[BUFFER_SIZE];
+int commandType(char *current_command_line) {
+    // Make a local copy because strtok modifies the string
+    char buf[BUFFER_SIZE];
+    strncpy(buf, current_command_line, BUFFER_SIZE);
+    buf[BUFFER_SIZE-1] = '\0';
 
-	strcpy(temp_push,current_command_line);
-	temp_push[4] = '\0';
+    // Extract the first token (up to first space)
+    char *tok = strtok(buf, " ");
+    if (!tok) {
+        fprintf(stderr, "  → NO TOKENS\n");
+        return INVALID_COMMAND;
+    }
+    fprintf(stderr, "  → first token = \"%s\"\n", tok);
 
-	strcpy(temp_pop,current_command_line);
-	temp_pop[3] = '\0';
-
-	strcpy(temp_label,current_command_line);
-	temp_label[5] = '\0';
-
-	strcpy(temp_if,current_command_line);
-	temp_if[2] = '\0';
-
-	strcpy(temp_Goto, current_command_line);
-	temp_Goto[4] = '\0';
-
-	strcpy(temp_Function,current_command_line);
-	temp_Function[8] = '\0';
-
-	strcpy(temp_Return,current_command_line);
-
-	if(strcmp(current_command_line,"add") == 0 || strcmp(current_command_line,"sub")==0
-	||strcmp(current_command_line,"neg")==0 || strcmp(current_command_line,"eq")==0
-	||strcmp(current_command_line,"gt")==0||strcmp(current_command_line,"lt")==0
-	||strcmp(current_command_line,"and")==0|| strcmp(current_command_line,"or")==0
-	||strcmp(current_command_line,"not")==0){
-		return C_ARITHMETIC;
-	}else if(strcmp(temp_push,"push")==0){
-		return C_PUSH;
-	}else if(strcmp(temp_pop,"pop")==0){
-		return C_POP;
-	}else if(strcmp(temp_label,"label")==0){
-		return C_LABEL;
-	}else if(strcmp(temp_if,"if")==0){
-		return C_IF;
-	}else if(strcmp(temp_Goto,"goto")==0){
-		return C_GOTO;
-	}else if(strcmp(temp_Function,"function")==0){
-		return C_FUNCTION;
-	}else if(strcmp(temp_Return,"return")==0){
-		return C_RETURN;
-	}else{
-		return INVALID_COMMAND;
-	}
+    if (strcmp(tok, "add") == 0
+     || strcmp(tok, "sub") == 0
+     || strcmp(tok, "neg") == 0
+     || strcmp(tok, "eq")  == 0
+     || strcmp(tok, "gt")  == 0
+     || strcmp(tok, "lt")  == 0
+     || strcmp(tok, "and") == 0
+     || strcmp(tok, "or")  == 0
+     || strcmp(tok, "not") == 0) {
+        return C_ARITHMETIC;
+    }
+    else if (strcmp(tok, "push")    == 0) return C_PUSH;
+    else if (strcmp(tok, "pop")     == 0) return C_POP;
+    else if (strcmp(tok, "label")   == 0) return C_LABEL;
+    else if (strcmp(tok, "goto")    == 0) return C_GOTO;
+    else if (strcmp(tok, "if-goto") == 0) return C_IF;
+    else if (strcmp(tok, "function")== 0) return C_FUNCTION;
+    else if (strcmp(tok, "return")  == 0) return C_RETURN;
+    else if (strcmp(tok, "call")    == 0) return C_CALL;
+    else                                  return INVALID_COMMAND;
 }
 //---------------------------------------------------------------------------
 //Parser Routine-arg1
@@ -434,6 +429,22 @@ while (current_command_line[i]) {
 arg2_v[j] = '\0';
 return atoi(arg2_v);
 }
+
+// Call this immediately after advance(), before commandType() or dispatch
+void trimLine(char *s) {
+    char *start = s;
+    // Skip leading whitespace
+    while (*start && isspace((unsigned char)*start)) start++;
+    if (start != s) {
+        memmove(s, start, strlen(start) + 1);
+    }
+    // Trim trailing whitespace
+    char *end = s + strlen(s) - 1;
+    while (end >= s && isspace((unsigned char)*end)) {
+        *end = '\0';
+        end--;
+    }
+}
 /////////////////////////////////////////////////////////////////////////
 //CODE-WRITER-CODE-WRITER-CODE-WRITER-CODE-WRITER-CODE-WRITER-CODE-WRITER-
 /////////////////////////////////////////////////////////////////////////
@@ -457,6 +468,14 @@ void setFileName(const char *file_path) {
     }
 
     strcpy(currentFileName, fileName);
+}
+//------------------------------------------------------------------------
+//CodeWrite- endsWithVM
+//------------------------------------------------------------------------
+int endsWithVM(const char *filename) {
+    size_t len = strlen(filename);
+    if (len < 3) return 0;
+    return strcmp(filename + len - 3, ".vm") == 0;
 }
 //-----------------------------------------------------------------------
 //CodeWriter writeArithmetic
@@ -844,115 +863,102 @@ void writePushPop(int command, char argue1[], char argue2[])
 //--------------------------------------------------------------------------------------------
 //CodeWriter-writeLabel	
 //--------------------------------------------------------------------------------------------
-void writeLabel(char command[]){
-	char temp[BUFFER_SIZE];
+void writeLabel(char command[]) {
+    // skip “label ” (6 chars)
+    char *label = command + 6;
+    while (*label == ' ') label++;        // trim leading spaces
+    char *end = label + strlen(label)-1;
+    while (end > label && isspace((unsigned char)*end)) *end-- = '\0';
 
-char *label = command+5;
+    // build scoped name: currentFunction$label
+    char uniqueLabel[256];
+    snprintf(uniqueLabel, sizeof(uniqueLabel), "%s$%s", currentFunction, label);
 
-	strcpy(temp, label);
+    fprintf(output_file, "(%s)\n", uniqueLabel);
+}
 
-	fprintf(output_file,"(");
-	fprintf(output_file,"%s", temp);
-	fprintf(output_file,")\n");
-	
-} 
 //---------------------------------------------------------------------------------------------
 //CodeWriter- writeIf
 //---------------------------------------------------------------------------------------------
-	void writeIf(char command[]){
-		char temp[BUFFER_SIZE];
+void writeIf(char command[]) {
+    // skip “if-goto ” (8 chars)
+    char *label = command + 8;
+    while (*label == ' ') label++;
+    char *end = label + strlen(label)-1;
+    while (end > label && isspace((unsigned char)*end)) *end-- = '\0';
 
-	char *label = command+7;
-	
-		ifText[0] = '\0';
-
-		strcat(ifText,"@SP\n");
-		strcat(ifText,"M=M-1\n");
-		strcat(ifText,"@SP\n");
-		strcat(ifText,"A=M\n");
-		strcat(ifText,"D=M\n");
-		//strcat(ifText,"@SP\n"); perhaps ifgoto is supposed to consume its previoulsy pushed value.
-		//strcat(ifText,"M=M+1\n");
-		strcat(ifText,"@");
-		strcat(ifText,label);
-		strcat(ifText,"\nD;JGT\n");
-		fprintf(output_file,"%s", ifText);
+    char target[256];
+    snprintf(target, sizeof(target), "%s$%s", currentFunction, label);
+    fprintf(output_file,
+        "@SP\n"
+        "M=M-1\n"
+        "A=M\n"
+        "D=M\n"
+        "@%s\n"
+        "D;JNE\n", target);
 }
 //--------------------------------------------------------------------------------------------
 //CodeWriter - writeGoto
 //--------------------------------------------------------------------------------------------
-void writeGoto(char command[]){
+void writeGoto(char command[]) {
+    // skip “goto ” (5 chars)
+    char *label = command + 5;
+    while (*label == ' ') label++;
+    char *end = label + strlen(label)-1;
+    while (end > label && isspace((unsigned char)*end)) *end-- = '\0';
 
-	char *label = command+4;
-	
-		gotoText[0] = '\0';
-
-		strcat(gotoText,"@");
-		strcat(gotoText,label);
-		strcat(gotoText,"\n0;JMP\n");
-		fprintf(output_file,"%s", gotoText);
-}
-//---------------------------------------------------------------------------------------------
+    char target[256];
+    snprintf(target, sizeof(target), "%s$%s", currentFunction, label);
+    fprintf(output_file, "@%s\n0;JMP\n", target);
+}//---------------------------------------------------------------------------------------------
 //CodeWriter-writeFunction
 //---------------------------------------------------------------------------------------------
-void writeFunction(char command[]){
-
-	char nArgs[BUFFER_SIZE];
-	strcpy(nArgs,command);//copy command into nArgs to extract the nVars local variable count
-
- 	size_t len = strlen(nArgs);
-	size_t end = len;
-    while (end > 0 && isdigit(nArgs[end - 1])) {
-        end--;
+void writeFunction(char command[]) {
+    char functionName[BUFFER_SIZE];
+    int nVars;
+	printf(" writeFunction got: '%s'\n", command);
+	fflush(stdout);
+    // Parse command like: "function Sys.init 0"
+    if (sscanf(command, "function %s %d", functionName, &nVars) != 2) {
+        fprintf(stderr, "Invalid function command format: %s\n", command);
+        return;
     }
-    size_t digit_len = len - end;
-    char *number = malloc(digit_len + 1);
-	
-	strncpy(number, nArgs + end, digit_len);
-    number[digit_len] = '\0';//number now holds the nVars(n is number of local variables)
-	int nNum = atoi(number);
 
-	char *function = command+8;
+    // update the global “currentFunction” so label/goto/if-goto get scoped
+    strncpy(currentFunction, functionName, BUFFER_SIZE-1);
+    currentFunction[BUFFER_SIZE-1] = '\0';
 
-	size_t len1 = strlen(function);
-    while (len1 > 0 && isdigit(function[len1 - 1])) {
-        len1--; // move back over digits
+    // Write function label
+    fprintf(output_file, "(%s)\n", functionName);
+
+    // Initialize local variables to 0
+    for (int i = 0; i < nVars; i++) {
+        fprintf(output_file,
+            "@0\n"
+            "D=A\n"
+            "@SP\n"
+            "A=M\n"
+            "M=D\n"
+            "@SP\n"
+            "M=M+1\n"
+        );
     }
-    function[len1] = '\0'; // truncate the digits
-    
-    functionText[0] = '\0';
-    
-    strcat(functionText,"(");
-    strcat(functionText,function);
-    strcat(functionText,")\n");
-    fprintf(output_file,"%s",functionText);
-
-    for(int i=0; i < nNum; i++){
-    	char push0[BUFFER_SIZE];
-
-    	strcpy(push0,"@0\n");
-		strcat(push0,"D=A\n");
-		strcat(push0,"@SP\n");
-		strcat(push0,"A=M\n");
-		strcat(push0,"M=D\n");
-		strcat(push0,"@SP\n");
-		strcat(push0,"M=M+1\n");
-		fprintf(output_file,"%s",push0);
-    }
-}//--------------------------------------------------------------------------------------------
+}
+//--------------------------------------------------------------------------------------------
 //CodeWriter-writeCall
 //---------------------------------------------------------------------------------------------
 void writeCall(char string[], int nArgs)
 {
 	char callText[256];
+	callText[0] = '\0';
 	char numStr[12];  // Enough to hold integer as string
 
-	strcat(callText,"@"); 				//PUSH RETURN ADDRESS
-	strcat(callText,"returnAdress");
-	sprintf(numStr, "%d", retAddrNum++);
-	strcat(callText, numStr);
-	strcat(callText,"\n");
-	strcat(callText,"A=D\n");
+	strcat(callText, "@");               //PUSH RETURN ADDRESS
+	strcat(callText, "returnAddress");  
+	sprintf(numStr, "%d", retAddrNum++); 
+	strcat(callText, numStr);           
+	strcat(callText, "\n");
+	strcat(callText,"D=A\n");
 	strcat(callText,"@SP\n");
 	strcat(callText,"A=M\n");
 	strcat(callText,"M=D\n");
@@ -993,11 +999,11 @@ void writeCall(char string[], int nArgs)
 
 	strcat(callText,"@");				//ARG = SP - 5 - NARGS
 	char numString[12];  				// Enough space for integer + null terminator
-	sprintf(numStr, "%d", nArgs); 		// Convert integer to string
-	strcat(callText, numStr);      		// Concatenate to target string
-	strcat(callText,"D=A\n");	
+	sprintf(numString, "%d", nArgs); 	// Convert integer to string
+	strcat(callText, numString);      	// Concatenate to target string
+	strcat(callText,"\nD=A\n");	
 	strcat(callText,"@5\n");
-	strcat(callText,"D=A+D\n");
+	strcat(callText,"D=D+A\n");
 	strcat(callText,"@SP\n");
 	strcat(callText,"D=M-D\n");
 	strcat(callText,"@ARG\n");
@@ -1007,7 +1013,17 @@ void writeCall(char string[], int nArgs)
 	strcat(callText,"@LCL\n");
 	strcat(callText,"M=D\n");
 
+	strcat(callText, "@");
+	strcat(callText, string);  // Function name
+	strcat(callText, "\n0;JMP\n");
 
+	// Declare the return address label
+	strcat(callText, "(");
+	strcat(callText, "returnAddress");
+	strcat(callText, numStr);  // same return address number as before
+	strcat(callText, ")\n");
+
+	fprintf(output_file,"%s",callText);
 }
 //---------------------------------------------------------------------------------------------
 //CodeWriter-writeReturn
@@ -1088,13 +1104,327 @@ void writeReturn(){
 	fprintf(output_file,"%s",returnText);
 }
 //---------------------------------------------------------------------------------------------
-//CodeWriter-close
+//CodeWriter - writeInit
 //---------------------------------------------------------------------------------------------
-void close(){
-	fclose(input_file);
-	fclose(output_file);
+void writeInit() {
+    // Write assembly code to set SP = 256
+    fprintf(output_file, "// bootstrap code: initialize SP=256\n");
+    fprintf(output_file, "@256\n");
+    fprintf(output_file, "D=A\n");
+    fprintf(output_file, "@SP\n");
+    fprintf(output_file, "M=D\n\n");
 }
 //---------------------------------------------------------------------------------------------
+//CodeWriter-close
+//---------------------------------------------------------------------------------------------
+
+void processFile(const char *path) {
+	fprintf(stderr, "=== Processing VM file: %s ===\n", path);
+    input_file = fopen(path, "r");
+    if (!input_file) {
+        fprintf(stderr, "Error reading file: %s\n", path);
+        return;
+    }
+    setFileName(path);
+
+    while (hasMoreLines(input_file, line)) {
+        advance(line, current_command);
+
+        trimLine(current_command);
+        if (current_command[0] == '\0') continue;
+
+        // *** DEBUG PRINT THE RAW, TRIMMED COMMAND ***
+    fprintf(stderr, "RAW CMD → \"%s\"\n", current_command);
+
+        int type = commandType(current_command);
+        switch (type) {
+            case C_ARITHMETIC:
+                writeArithmetic(current_command);
+                break;
+            case C_PUSH:
+            case C_POP:
+                arg1(current_command, arg1_string);
+                arg2_int = arg2(current_command, arg2_value, 0);
+                writePushPop(type, arg1_string, arg2_value);
+                break;
+            case C_LABEL:
+                writeLabel(current_command);
+                break;
+            case C_GOTO:
+                writeGoto(current_command);
+                break;
+            case C_IF:
+                writeIf(current_command);
+                break;
+            case C_FUNCTION:
+                writeFunction(current_command);
+                break;
+            case C_RETURN:
+                writeReturn();
+                break;
+            case C_CALL: {
+                char fn[BUFFER_SIZE];
+                int nargs;
+                sscanf(current_command, "call %s %d", fn, &nargs);
+                writeCall(fn, nargs);
+                break;
+            }
+            default:
+                fprintf(stderr, "Unknown command: %s\n", current_command);
+        }
+    }
+
+    fclose(input_file);
+}
+
+//---------------------------------------------------------------------------------------------
+
+int main(int argc, const char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <input file or folder> <output file>\n", argv[0]);
+        return 1;
+    }
+
+    // 1) Determine file vs. directory
+    struct stat path_stat;
+    if (stat(argv[1], &path_stat) != 0) {
+        perror("stat");
+        return 1;
+    }
+
+    // 2) Open output file
+    output_file = fopen(argv[2], "w");
+    if (!output_file) {
+        perror("fopen output");
+        return 1;
+    }
+
+    // 3) Bootstrap
+    writeInit();
+    writeCall("Sys.init", 0);
+
+    
+
+    if (S_ISDIR(path_stat.st_mode)) {
+        // 1) Process Sys.vm first
+        char sysPath[1024];
+        snprintf(sysPath, sizeof(sysPath), "%s/Sys.vm", argv[1]);
+        struct stat st;
+        if (stat(sysPath, &st) == 0 && S_ISREG(st.st_mode)) {
+            processFile(sysPath);
+        }
+
+        // 2) Then process all other .vm files in the directory
+        DIR *dir = opendir(argv[1]);
+        if (!dir) {
+            perror("opendir");
+            return 1;
+        }
+
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            // Skip non-.vm files and Sys.vm (already done)
+            if (!endsWithVM(entry->d_name) ||
+                strcmp(entry->d_name, "Sys.vm") == 0) {
+                continue;
+            }
+
+            char full_path[1024];
+            snprintf(full_path, sizeof(full_path), "%s/%s",
+                     argv[1], entry->d_name);
+            processFile(full_path);
+        }
+        closedir(dir);
+    }
+}
+/*Remove all debug prints (fprintf(stderr, …)) now that you’ve verified ordering.
+
+Delete the RAW CMD and first token logging as well as the 🛠 writeFunction got: line.
+
+Recompile and run on the directory again—your out.asm will be clean, with just the Hack assembly.
+*/
+
+
+
+/*int main(int argc, const char *argv[]) {
+    if (argc != 3) {
+        printf("Usage: %s <input file or folder> <output file, Prog.asm>\n", argv[0]);
+        return 1;
+    }
+
+    struct stat path_stat;
+    stat(argv[1], &path_stat);
+
+    output_file = fopen(argv[2], "w");
+    if (output_file == NULL) {
+        printf("Error writing file\n");
+        return 1;
+    }
+
+    writeInit();  
+    // Call Sys.init with 0 arguments
+    writeCall("Sys.init", 0);
+
+    if (S_ISREG(path_stat.st_mode)) {
+        // Single .vm file
+        input_file = fopen(argv[1], "r");
+        if (input_file == NULL) {
+            printf("Error reading file: %s\n", argv[1]);
+            return 1;
+        }
+
+        setFileName(argv[1]);
+
+        while (hasMoreLines(input_file, line)) {
+    advance(line, current_command);
+
+    // 1) Trim off any tabs/spaces around the command
+    trimLine(current_command);
+
+    // 2) Skip blank lines
+    if (current_command[0] == '\0') continue;
+
+    // 3) Debug the cleaned command
+    int type = commandType(current_command);
+    printf("DEBUG: command=\"%s\" → type=%d\n", current_command, type);
+    fflush(stdout);
+
+    // 4) Dispatch based on type
+    switch (type) {
+        case C_ARITHMETIC:
+            writeArithmetic(current_command);
+            break;
+        case C_PUSH:
+        case C_POP:
+            arg1(current_command, arg1_string);
+            arg2_int = arg2(current_command, arg2_value, 0);
+            writePushPop(type, arg1_string, arg2_value);
+            break;
+        case C_LABEL:
+            writeLabel(current_command);
+            break;
+        case C_GOTO:
+            writeGoto(current_command);
+            break;
+        case C_IF:
+            writeIf(current_command);
+            break;
+        case C_FUNCTION:
+            writeFunction(current_command);
+            break;
+        case C_RETURN:
+            writeReturn();
+            break;
+        case C_CALL: {
+            char fn[BUFFER_SIZE];
+            int nargs;
+            sscanf(current_command, "call %s %d", fn, &nargs);
+            writeCall(fn, nargs);
+            break;
+        }
+        default:
+            printf("failed\n");
+    }
+}
+
+        fclose(input_file);
+    } else if (S_ISDIR(path_stat.st_mode)) {
+        // Folder containing .vm files
+        DIR *dir = opendir(argv[1]);
+        if (!dir) {
+            printf("Error opening directory: %s\n", argv[1]);
+            return 1;
+        }
+
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            if (!endsWithVM(entry->d_name)) continue;
+
+            char full_path[1024];
+            snprintf(full_path, sizeof(full_path), "%s/%s", argv[1], entry->d_name);
+
+            input_file = fopen(full_path, "r");
+            if (!input_file) {
+                printf("Error reading file: %s\n", full_path);
+                continue;
+            }
+
+          
+          //Set file name for context (used in label scoping etc.)
+    setFileName(full_path);
+
+    while (hasMoreLines(input_file, line)) {
+    advance(line, current_command);
+
+    // 1) Trim off any tabs/spaces around the command
+    trimLine(current_command);
+
+    // 2) Skip blank lines
+    if (current_command[0] == '\0') continue;
+
+    // 3) Debug the cleaned command
+    int type = commandType(current_command);
+    printf("DEBUG: command=\"%s\" → type=%d\n", current_command, type);
+    fflush(stdout);
+
+    // 4) Dispatch based on type
+    switch (type) {
+        case C_ARITHMETIC:
+            writeArithmetic(current_command);
+            break;
+        case C_PUSH:
+        case C_POP:
+            arg1(current_command, arg1_string);
+            arg2_int = arg2(current_command, arg2_value, 0);
+            writePushPop(type, arg1_string, arg2_value);
+            break;
+        case C_LABEL:
+            writeLabel(current_command);
+            break;
+        case C_GOTO:
+            writeGoto(current_command);
+            break;
+        case C_IF:
+            writeIf(current_command);
+            break;
+        case C_FUNCTION:
+            writeFunction(current_command);
+            break;
+        case C_RETURN:
+            writeReturn();
+            break;
+        case C_CALL: {
+            char fn[BUFFER_SIZE];
+            int nargs;
+            sscanf(current_command, "call %s %d", fn, &nargs);
+            writeCall(fn, nargs);
+            break;
+        }
+        default:
+            printf("failed\n");
+    }
+}
+   	
+}
+
+    closedir(dir);
+    closeFiles();
+	return 0;
+    } else {
+        printf("Invalid input: not a file or folder\n");
+        return 1;
+    }
+
+    closeFiles();
+    fclose(output_file);
+    return 0;
+}
+
+
+
+
+
+
 int main(int argc,const char *argv[]) {
 	if (argc != 3) {
         printf("Usage: %s <input file,Prog.vm> <output file,Prog.asm>\n", argv[0]);
@@ -1109,6 +1439,9 @@ int main(int argc,const char *argv[]) {
 		printf("Error writing file");
 	}
    
+	//Set file name for context (used in label scoping etc.)
+    setFileName(argv[1]);
+
     while(hasMoreLines(input_file,line)){
     	advance(line,current_command);
     	if (strlen(line) == 0) {
@@ -1133,9 +1466,18 @@ int main(int argc,const char *argv[]) {
    			writeFunction(current_command);
    		}else if(commandType(current_command)==C_RETURN){
    			writeReturn();
+   		}else if(commandType(current_command)==C_CALL){
+   			
+   			char functionName[50];
+    		int nArgs;
+
+    		// Skip the "call" keyword and extract function name and nArgs
+   		 	sscanf(current_command, "call %s %d", functionName, &nArgs);
+
+   			writeCall(functionName, nArgs);
    		}else printf("failed\n");
    	}	
 
    	close();
 	return 0;
-}
+}*/
