@@ -317,8 +317,9 @@ int hasMoreLines(FILE *input_filename, char line_name[]){
         // empty line or comment-only, skip
         continue;
         }
-		return 1;
+	
 		line[strcspn(line, "\r\n")] = '\0';
+            return 1;
 	}
 	return 0;
 }
@@ -345,7 +346,7 @@ int commandType(char *current_command_line) {
         fprintf(stderr, "  → NO TOKENS\n");
         return INVALID_COMMAND;
     }
-    fprintf(stderr, "  → first token = \"%s\"\n", tok);
+    //fprintf(stderr, "  → first token = \"%s\"\n", tok);
 
     if (strcmp(tok, "add") == 0
      || strcmp(tok, "sub") == 0
@@ -916,12 +917,12 @@ void writeGoto(char command[]) {
 void writeFunction(char command[]) {
     char functionName[BUFFER_SIZE];
     int nVars;
-	printf(" writeFunction got: '%s'\n", command);
-	fflush(stdout);
+	//printf(" writeFunction got: '%s'\n", command);
+	//fflush(stdout);
     // Parse command like: "function Sys.init 0"
     if (sscanf(command, "function %s %d", functionName, &nVars) != 2) {
-        fprintf(stderr, "Invalid function command format: %s\n", command);
-        return;
+      fprintf(stderr, "Invalid function command format: %s\n", command);
+       return;
     }
 
     // update the global “currentFunction” so label/goto/if-goto get scoped
@@ -1119,7 +1120,7 @@ void writeInit() {
 //---------------------------------------------------------------------------------------------
 
 void processFile(const char *path) {
-	fprintf(stderr, "=== Processing VM file: %s ===\n", path);
+	//fprintf(stderr, "=== Processing VM file: %s ===\n", path);
     input_file = fopen(path, "r");
     if (!input_file) {
         fprintf(stderr, "Error reading file: %s\n", path);
@@ -1134,7 +1135,7 @@ void processFile(const char *path) {
         if (current_command[0] == '\0') continue;
 
         // *** DEBUG PRINT THE RAW, TRIMMED COMMAND ***
-    fprintf(stderr, "RAW CMD → \"%s\"\n", current_command);
+   // fprintf(stderr, "RAW CMD → \"%s\"\n", current_command);
 
         int type = commandType(current_command);
         switch (type) {
