@@ -1,0 +1,28 @@
+class Word{
+	
+	field String word;
+	field int choice;
+
+	constructor Word new(int x){
+	let choice = x;
+	
+	return this;
+	}
+
+	method void getWord(){
+	if(choice = 1){
+		let word = Keyboard.readLine("Write down any adjective and press enter");
+		}
+	if(choice = 2){
+		let word = Keyboard.readLine("Write down any noun and press enter");
+		}
+	if(choice = 3){
+		let word = Keyboard.readLine("Write down a name of a place and press enter");
+		}
+	return;
+	}
+	
+	method  String returnWord(){
+	return word;
+	}
+}

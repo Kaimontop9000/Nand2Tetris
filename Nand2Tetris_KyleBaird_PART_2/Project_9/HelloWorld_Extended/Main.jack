@@ -1,0 +1,30 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/9/HelloWorld/Main.jack
+
+/** Hello World program. */
+class Main {
+   function void main() {
+	var Word word1, word2, word3;
+	var int choice;
+	var Paragraph fullParagraph;
+
+	let choice = 1;
+	let word1 = Word.new(choice);
+	let choice = 2;
+	let word2 = Word.new(choice);
+	let choice = 3;
+	let word3 = Word.new(choice);
+
+	do word1.getWord();
+	do word2.getWord();
+	do word3.getWord();
+
+	let choice = 1;
+	let fullParagraph = Paragraph.new(choice, word1, word2, word3);
+
+	do fullParagraph.paragraph();
+	return;
+   }
+}

@@ -1,0 +1,29 @@
+class Paragraph{
+	
+	field int choice;
+	field Word a1, a2, a3;
+	field String one, two, three;
+	
+	constructor Paragraph new(int x, Word a, Word b, Word c){
+	let choice = x;
+	let a1 = a;
+	let a2 = b;
+	let a3 = c;
+	
+	return this;
+	}
+
+	method void paragraph(){
+	do Output.printString("All around the world, you are known as ");
+	do Output.printString(a1.returnWord());
+	do Output.printString(" For all who see you know this to be true. Even the Oracle of ");
+	do Output.printString(a2.returnWord());
+	do Output.printString(" has declared it so. For those in the land of ");
+	do Output.printString(a3.returnWord());
+	do Output.printString(" will forever sing your praise!!!");
+	return;
+	}
+
+	
+
+}
