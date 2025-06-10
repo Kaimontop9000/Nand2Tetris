@@ -1,0 +1,34 @@
+class RandomGenerator {
+    field int seed;
+
+    constructor RandomGenerator new(int s) {
+        let seed = s;
+        return this;
+    }
+
+    method int next() {
+        var int product, sum, quotient, mod;
+
+        let product = Math.multiply(23, seed);
+        let sum = product + 47;
+
+        let quotient = Math.divide(sum, 32767);
+        let product = Math.multiply(quotient, 32767);
+        let mod = sum - product;
+
+        let seed = mod;
+        return mod;
+    }
+
+    method int rollDice(int sides) {
+        var int r, quotient, product, mod;
+
+        let r = next();
+
+        let quotient = Math.divide(r, sides);
+        let product = Math.multiply(quotient, sides);
+        let mod = r - product;
+
+        return mod + 1;  // scale to [1, sides]
+    }
+}

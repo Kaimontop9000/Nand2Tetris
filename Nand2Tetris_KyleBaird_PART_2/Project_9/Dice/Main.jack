@@ -1,0 +1,68 @@
+class Main {
+
+    function void main() {
+        var RandomGenerator rng;
+        var String inputStr, continueStr;
+        var int sides, result, seed;
+        var boolean done;
+
+        let seed = 12345;
+        let rng = RandomGenerator.new(seed);
+        let done = false;
+
+        while (~done) {
+            // Prompt user
+            do Output.printString("Enter dice (e.g. d6): ");
+
+            // Read dice input string
+            let inputStr = Keyboard.readLine("ROLL your dice, (example - d6)");
+
+            // Parse number of sides from input string
+            let sides = parseSides(inputStr);
+
+            // Roll dice with parsed number of sides
+            let result = rng.rollDice(sides);
+
+            // Output result
+            do Output.printString("Rolled: ");
+            do Output.printInt(result);
+            do Output.printChar(10);  // newline char
+
+            // Ask to roll again
+            do Output.printString("Roll again? (q to quit): ");
+            let continueStr = Keyboard.readLine("");
+
+            // If input is 'q' (ASCII 113), stop
+            if ((continueStr.length() = 1) & (continueStr.charAt(0) = 113)) {
+                let done = true;
+            }
+        }
+
+        return;
+    }
+
+    method int parseSides(String str) {
+        var int i, sides;
+        var boolean done;
+        var char ch;
+
+        let i = 1;      // skip 'd'
+        let sides = 0;
+        let done = false;
+
+        while (~done) {
+            if ((i > str.length()) | (i = str.length())) {
+                let done = true;
+            } else {
+                let ch = str.charAt(i);
+                if ((ch < 48) | (ch > 57)) { // not a digit
+                    let done = true;
+                } else {
+                    let sides = Math.multiply(sides, 10) + (ch - 48);
+                    let i = i + 1;
+                }
+            }
+        }
+        return sides;
+    }
+}
