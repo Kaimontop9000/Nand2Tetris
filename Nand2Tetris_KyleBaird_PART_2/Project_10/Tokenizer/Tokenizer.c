@@ -9,7 +9,7 @@ int hasMoreTokens(FILE *input){
 		if(!isspace(c)){
 			ungetc(c, input);
 			return 1;
-		}	
+		}				
 	}
 	return 0;
 }
