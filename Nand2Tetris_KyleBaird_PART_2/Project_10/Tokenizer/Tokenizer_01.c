@@ -3,6 +3,15 @@
 #include <ctype.h>
 #include <dirent.h>
 
+#define SYMBOL 0
+#define KEYWORD 1
+#define IDENTIFIER 2
+#define INT_CONST 3
+#define STRING_CONST 4
+
+char token[250];
+int stringFlag;
+
 int hasMoreTokens(FILE *input){
 	int c;
 	while((c=fgetc(input))!=EOF){
@@ -13,14 +22,65 @@ int hasMoreTokens(FILE *input){
 	}
 	return 0;
 }
+int tokenType(char *token, int flag){
+	if(strcmp(token,"{") == 0 || strcmp(token,"}") == 0 || strcmp(token,"(") == 0 || strcmp(token,")") == 0 || strcmp(token, "[") == 0
+		|| strcmp(token, "]") == 0 || strcmp(token, ".") == 0 || strcmp(token, ",") == 0 ||
+		strcmp(token, ";") == 0 || strcmp(token, "+") == 0 || strcmp(token,"-") == 0 || strcmp(token, "*") == 0 ||
+		strcmp(token, "/") == 0 || strcmp(token, "&") == 0 || strcmp(token, "|") == 0 || strcmp(token, "<") == 0 || 
+		strcmp(token,">") == 0 || strcmp(token,"=") == 0 || strcmp(token,"~") == 0){
 
-int getToken(FILE *in, char *string, int maxLen){
+		return SYMBOL;	
+	} 
+	else if(strcmp(token, "class") == 0 || strcmp(token, "constructor") == 0 || strcmp(token,"function") == 0 ||
+	 	strcmp(token, "method") == 0 || strcmp(token, "field") == 0 || strcmp(token, "static") == 0 || strcmp(token,"var") == 0 
+	 	|| strcmp(token, "int")== 0 || strcmp(token,"char")== 0 || strcmp(token, "boolean") == 0 || strcmp(token, "void") == 0
+	 	|| strcmp(token , "true") == 0 || strcmp(token, "false") == 0 || strcmp(token, "null") == 0 || strcmp(token,"this") == 0
+		|| strcmp(token, "let") == 0 || strcmp(token, "do") == 0 || strcmp(token, "if") == 0 || strcmp(token, "else") == 0 
+		|| strcmp(token, "while") == 0 || strcmp(token, "return") == 0){
+
+		return KEYWORD;
+	}
+	else if(flag == 1){
+		return STRING_CONST;
+	}
+	else if (token != NULL && *token != '\0') {
+    const char *str = token;
+    while (*str) {
+        if (!isdigit((unsigned char)*str)) {
+            break;
+        }
+        str++;
+    }
+    if (*str == '\0') {
+        return INT_CONST; // All digits
+    }
+}
+
+	else{
+		return IDENTIFIER;
+	}
+}
+	
+
+int getToken(FILE *in, char *string, int maxLen, int flag){
+	flag = 0;
 	int x = 1;
 	int c;
 	int index=0;
 	while(x){
 		c=fgetc(in);
-		if (c == EOF) {
+
+		if (c == '/') {
+    	int next = fgetc(in);
+    	if (next == '/') {
+        	// Skip until end of line
+        	while ((c = fgetc(in)) != EOF && c != '\n');
+        	continue;  // start over, get next character
+    		} else {
+        	ungetc(next, in);  // not a comment, treat '/' as a symbol later
+    		}
+		}		
+		else if (c == EOF) {
  		   if (index > 0) {
    				string[index] = '\0';  // return last token
         		x = 0;
@@ -64,6 +124,7 @@ int getToken(FILE *in, char *string, int maxLen){
             	}
         	}
         	string[index] = '\0';
+        	flag = 1;
         	x = 0;  // done with this token
         	return 1;
     		} else {
