@@ -1,16 +1,51 @@
+/*Created June 01 2025- Last edited June 24 2025
+Jack Tokenizer
+Usage - ./Tokenizer_01 <filename.jack/folderName>
+----------------------------------------------------*/
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <dirent.h>
 
+//TokenType
 #define SYMBOL 0
 #define KEYWORD 1
 #define IDENTIFIER 2
 #define INT_CONST 3
 #define STRING_CONST 4
 
-char token[250];
-int stringFlag;
+//KeywordType
+#define CLASS 5
+#define METHOD 6
+#define FUNCTION 7
+#define CONSTRUCTOR 8
+#define INTE 9
+#define BOOLEA 10
+#define CHARA 11
+#define VOIDS 12
+#define VAR 13
+#define STATIC 14
+#define FIELD 15
+#define LET 16
+#define DO 17
+#define IF 18
+#define ELSE 19
+#define WHILE 20
+#define RETURN 21
+#define TRU 22
+#define FALS 23
+#define NUL 24
+#define THIS 25 
+
+
+char token[250];			//used to hold the token 
+int stringFlag;				//used for string constants, because we remove the "" from the string, this flag helps us to differentiate
+							//between identifiers. Flag is set in advance() and is tested in the tokenType()
+
+
+/*hasMoreTokens() skips over whitespace and returns if a valid character is found. I think it only skips over the first initial whitespace
+but because we assume that the source code is error free I hope that there is never double space characters*/
 
 int hasMoreTokens(FILE *input){
 	int c;
@@ -22,51 +57,19 @@ int hasMoreTokens(FILE *input){
 	}
 	return 0;
 }
-int tokenType(char *token, int flag){
-	if(strcmp(token,"{") == 0 || strcmp(token,"}") == 0 || strcmp(token,"(") == 0 || strcmp(token,")") == 0 || strcmp(token, "[") == 0
-		|| strcmp(token, "]") == 0 || strcmp(token, ".") == 0 || strcmp(token, ",") == 0 ||
-		strcmp(token, ";") == 0 || strcmp(token, "+") == 0 || strcmp(token,"-") == 0 || strcmp(token, "*") == 0 ||
-		strcmp(token, "/") == 0 || strcmp(token, "&") == 0 || strcmp(token, "|") == 0 || strcmp(token, "<") == 0 || 
-		strcmp(token,">") == 0 || strcmp(token,"=") == 0 || strcmp(token,"~") == 0){
 
-		return SYMBOL;	
-	} 
-	else if(strcmp(token, "class") == 0 || strcmp(token, "constructor") == 0 || strcmp(token,"function") == 0 ||
-	 	strcmp(token, "method") == 0 || strcmp(token, "field") == 0 || strcmp(token, "static") == 0 || strcmp(token,"var") == 0 
-	 	|| strcmp(token, "int")== 0 || strcmp(token,"char")== 0 || strcmp(token, "boolean") == 0 || strcmp(token, "void") == 0
-	 	|| strcmp(token , "true") == 0 || strcmp(token, "false") == 0 || strcmp(token, "null") == 0 || strcmp(token,"this") == 0
-		|| strcmp(token, "let") == 0 || strcmp(token, "do") == 0 || strcmp(token, "if") == 0 || strcmp(token, "else") == 0 
-		|| strcmp(token, "while") == 0 || strcmp(token, "return") == 0){
+/* advance() only called if hasMoreTokens() returns true. Takes a FILE pointer to read in the next token, 
+	a char string[] to hold the token, maxLen for buffer overflow and a global flag that is used to for string constants(this helps
+	differentiate between string constants and identifiers because we eliminat the "" from string constants */
 
-		return KEYWORD;
-	}
-	else if(flag == 1){
-		return STRING_CONST;
-	}
-	else if (token != NULL && *token != '\0') {
-    const char *str = token;
-    while (*str) {
-        if (!isdigit((unsigned char)*str)) {
-            break;
-        }
-        str++;
-    }
-    if (*str == '\0') {
-        return INT_CONST; // All digits
-    }
-}
+int advance(FILE *in, char *string, int maxLen, int *flag){
+	*flag = 0;  //reset flag everytime advance is called, gets ready to find next token
 
-	else{
-		return IDENTIFIER;
-	}
-}
-	
+	int x = 1; //used for the while loop, posisbly another more elegant solution
 
-int getToken(FILE *in, char *string, int maxLen, int flag){
-	flag = 0;
-	int x = 1;
-	int c;
-	int index=0;
+	int c;		//holds the next char from FILE pointer
+	int index=0;	//lets us know how far along we are into the token. How many chars we have read in 
+
 	while(x){
 		c=fgetc(in);
 
@@ -124,7 +127,7 @@ int getToken(FILE *in, char *string, int maxLen, int flag){
             	}
         	}
         	string[index] = '\0';
-        	flag = 1;
+        	*flag = 1;
         	x = 0;  // done with this token
         	return 1;
     		} else {
@@ -142,8 +145,129 @@ int getToken(FILE *in, char *string, int maxLen, int flag){
 	}
 }
 
+/*tokenType() returns a constant of either KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST as set by define*/
 
+int tokenType(char *token, int flag){
+	if(strcmp(token,"{") == 0 || strcmp(token,"}") == 0 || strcmp(token,"(") == 0 || strcmp(token,")") == 0 || strcmp(token, "[") == 0
+		|| strcmp(token, "]") == 0 || strcmp(token, ".") == 0 || strcmp(token, ",") == 0 ||
+		strcmp(token, ";") == 0 || strcmp(token, "+") == 0 || strcmp(token,"-") == 0 || strcmp(token, "*") == 0 ||
+		strcmp(token, "/") == 0 || strcmp(token, "&") == 0 || strcmp(token, "|") == 0 || strcmp(token, "<") == 0 || 
+		strcmp(token,">") == 0 || strcmp(token,"=") == 0 || strcmp(token,"~") == 0){
 
+		return SYMBOL;	
+	} 
+	else if(strcmp(token, "class") == 0 || strcmp(token, "constructor") == 0 || strcmp(token,"function") == 0 ||
+	 	strcmp(token, "method") == 0 || strcmp(token, "field") == 0 || strcmp(token, "static") == 0 || strcmp(token,"var") == 0 
+	 	|| strcmp(token, "int")== 0 || strcmp(token,"char")== 0 || strcmp(token, "boolean") == 0 || strcmp(token, "void") == 0
+	 	|| strcmp(token , "true") == 0 || strcmp(token, "false") == 0 || strcmp(token, "null") == 0 || strcmp(token,"this") == 0
+		|| strcmp(token, "let") == 0 || strcmp(token, "do") == 0 || strcmp(token, "if") == 0 || strcmp(token, "else") == 0 
+		|| strcmp(token, "while") == 0 || strcmp(token, "return") == 0){
+
+		return KEYWORD;
+	}
+	else if(flag == 1){
+		return STRING_CONST;
+	}
+	else if (token != NULL && *token != '\0') {
+    const char *str = token;
+    while (*str) {
+        if (!isdigit((unsigned char)*str)) {
+            break;
+        }
+        str++;
+    }
+    if (*str == '\0') {
+        return INT_CONST; // All digits
+    }
+}
+
+	else{
+
+		return IDENTIFIER;
+	}
+}
+	
+int keyword(char *string){
+	if(strcmp(string, "class")==0){
+		return CLASS;
+	}
+	else if(strcmp(string, "method")==0){
+		return METHOD;
+	}
+	else if(strcmp(string, "function")==0){
+		return FUNCTION;
+	}
+	else if(strcmp(string, "constructor")==0){
+		return CONSTRUCTOR;
+	}
+	else if(strcmp(string, "int")==0){
+		return INTE;
+	}
+	else if(strcmp(string, "boolean")==0){
+		return BOOLEA;
+	}
+	else if(strcmp(string, "char")==0){
+		return CHARA;
+	}
+	else if(strcmp(string, "void")==0){
+		return VOIDS;
+	}
+	else if(strcmp(string, "var")==0){
+		return VAR;
+	}
+	else if(strcmp(string, "static")==0){
+		return STATIC;
+	} 
+	else if(strcmp(string, "field")==0){
+		return FIELD;
+	}
+	else if(strcmp(string, "let")==0){
+		return LET;
+	}
+	else if(strcmp(string, "do")==0){
+		return DO;
+	}
+	else if(strcmp(string, "if")==0){
+		return IF;
+	}
+	else if(strcmp(string, "else")==0){
+		return ELSE;
+	}
+	else if(strcmp(string, "while")==0){
+		return WHILE;
+	}
+	else if(strcmp(string, "return")==0){
+		return RETURN;
+	}
+	else if(strcmp(string, "true")==0){
+		return TRU;
+	}
+	else if(strcmp(string, "false")==0){
+		return FALS;
+	}
+	else if(strcmp(string, "null")==0){
+		return NUL;
+	}
+	else if(strcmp(string, "this")==0){
+		return THIS;
+	}
+}
+
+char symbol(char *string){
+	return string[0];
+}
+
+char *identifer(char *string){
+	return string;
+}
+
+char *intVal(char *string){
+	return string;
+}
+
+char *stringVal(char *string){
+	return string;
+}
 
 void make_output_filename(const char *input_filename, char *output_filename, size_t size) {
     const char *dot = strrchr(input_filename, '.');
