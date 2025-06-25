@@ -321,6 +321,7 @@ void make_output_filename(const char *input_filename, char *output_filename, siz
 //============================================================================================================
 int main(int argc, char const *argv[])
 {
+//=============================================================================================================
 	//shows how to use the program if argument line is not correctly used
 	if(argc != 2){
 		printf("Usage: %s filename.jack|<folder_Path>\n", argv[0]);
@@ -348,8 +349,9 @@ int main(int argc, char const *argv[])
 			printf("Error opening output file\n");
 			return 1;
 		} 
-		
+	/*Up next is for single file tokenization*/
 //=============================================================================================================
+		fprintf(outputFile, "<tokens>\n");
 		while(hasMoreTokens(inputFile)){
 			int len = 250;
 			int x;
@@ -436,6 +438,7 @@ int main(int argc, char const *argv[])
 				fprintf(outputFile, "<identifier> %s </identifier>\n",token);
 			}
 		} 
+		fprintf(outputFile, "</tokens>\n");
 //=====================================================================================================================
 		fclose(inputFile);
 		fclose(outputFile);
@@ -471,9 +474,11 @@ int main(int argc, char const *argv[])
 					continue;
 				}
 
-				//create the output file name
-				char folder_Output_File[280];
-				make_output_filename(entry->d_name, folder_Output_File, sizeof(folder_Output_File));	
+				// create the output file name in the same folder
+				char folder_Output_File[512];              // full path
+				char output_filename_only[280];            // just the name like FooT.xml
+				make_output_filename(entry->d_name, output_filename_only, sizeof(output_filename_only));
+				snprintf(folder_Output_File, sizeof(folder_Output_File), "%s/%s", argv[1], output_filename_only);
 
 				//open the output file, name is based off of input name. Example : prog.jack becomes progT.xml
 				FILE *F_OutputFile = fopen(folder_Output_File, "w");
@@ -481,7 +486,9 @@ int main(int argc, char const *argv[])
 					printf("Error opening output file\n");
 					return 1;
 				}
+	/*Up next is for folder with one or more files tokenization*/
 //=======================================================================================================================
+				fprintf(F_OutputFile, "<tokens>\n");
 				while(hasMoreTokens(folderFile)){
 					int len = 250;
 					int x;
@@ -493,7 +500,15 @@ int main(int argc, char const *argv[])
 					if (x == -1) continue; // skip empty or invalid tokens
 					else if(x == SYMBOL){
 						c = symbol(token);
+						if(c == '<'){
+							fprintf(F_OutputFile, "<symbol> &lt </symbol>\n");
+						}else if(c == '>'){
+							fprintf(F_OutputFile, "<symbol> &gt </symbol>\n");
+						}else if(c == '&'){
+							fprintf(F_OutputFile, "<symbol> &amp </symbol>\n");
+						}else{
 						fprintf(F_OutputFile, "<symbol> %c </symbol>\n",c);
+						}
 					}
 					else if(x == KEYWORD){				
 				 		y = keyword(token);
@@ -565,6 +580,7 @@ int main(int argc, char const *argv[])
 						fprintf(F_OutputFile, "<identifier> %s </identifier>\n",token);
 					}
 				} 
+				fprintf(F_OutputFile, "</tokens>\n");
 //================================================================================================================================
 				fclose(folderFile);
 				fclose(F_OutputFile);
