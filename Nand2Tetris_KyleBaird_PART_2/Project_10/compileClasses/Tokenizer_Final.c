@@ -42,7 +42,7 @@ Usage - ./Tokenizer_01 <filename.jack/folderName>
 char token[250];			//used to hold the token 
 int stringFlag;				//used for string constants, because we remove the "" from the string, this flag helps us to differentiate
 							//between identifiers. Flag is set in advance() and is tested in the tokenType()
-
+int len = 250;
 
 /*hasMoreTokens() skips over whitespace and returns if a valid character is found. I think it only skips over the first initial whitespace
 but because we assume that the source code is error free I hope that there is never double space characters*/
@@ -62,7 +62,7 @@ int hasMoreTokens(FILE *input){
 	a char string[] to hold the token, maxLen for buffer overflow and a global flag that is used to for string constants(this helps
 	differentiate between string constants and identifiers because we eliminat the "" from string constants */
 
-int advance(FILE *in, char *string, int maxLen, int *flag){
+int advance(FILE *in, char *string, int *flag){
 	*flag = 0;  //reset flag everytime advance is called, gets ready to find next token
 
 	int x = 1; //used for the while loop, posisbly another more elegant solution
@@ -145,7 +145,7 @@ int advance(FILE *in, char *string, int maxLen, int *flag){
         	// start reading a string constant token
         	index = 0;
        		while ((c = fgetc(in)) != EOF && c != '"') {
-            	if (index < maxLen - 1) {
+            	if (index < len - 1) {
                 string[index++] = c;
             	}
         	}
@@ -165,7 +165,7 @@ int advance(FILE *in, char *string, int maxLen, int *flag){
     		// Start of an identifier
     		string[index++] = c;
     		while ((c = fgetc(in)) != EOF && (isalnum(c) || c == '_')) {
-        		if (index < maxLen - 1) {
+        		if (index < len - 1) {
             		string[index++] = c;
         		}
     		}
@@ -178,7 +178,7 @@ int advance(FILE *in, char *string, int maxLen, int *flag){
 		else if (isdigit(c)) {
    			string[index++] = c;
     		while ((c = fgetc(in)) != EOF && isdigit(c)) {
-        		if (index < maxLen - 1) {
+        		if (index < len - 1) {
             		string[index++] = c;
         		}
     		}
@@ -327,7 +327,83 @@ void make_output_filename(const char *input_filename, char *output_filename, siz
     output_filename[base_len] = '\0';
     strncat(output_filename, "T.xml", size - base_len - 1);
 }
+void process(char *process,  FILE *in,  FILE *out) {
+	if(strcmp(token,process)==0) {
+		fprintf(out, "<%sStatement>\n",process);
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
+	}
+}
+void compileClass(FILE *out){
+	fprintf(out, "<class>");
+	fprintf(out, "</class>");
+}
 
+void compileClassVarDec(FILE *out){
+	fprintf(out, "<classVarDec>");
+	fprintf(out, "</classVarDec>");
+}
+
+void compileSubroutineDec(FILE *out){
+	fprintf(out, "<subroutineDec>");
+	fprintf(out, "</subroutineDec>");
+}
+
+void compileParamaterList(FILE *out){
+	fprintf(out, "<ParameterList>");
+	fprintf(out, "</ParameterList>");
+}
+
+void compileSubroutineBody(FILE *out){
+	fprintf(out, "<subroutineBody>");
+	fprintf(out, "</subroutineBody>");
+}
+
+void compileStatements(FILE *out){
+	fprintf(out, "<statements>");
+	fprintf(out, "</statements>");
+}
+
+void compileLet(FILE *out){
+	fprintf(out, "<letStatement>");
+	fprintf(out, "</letStatement>");
+}
+
+void compileIf(FILE *out){
+	fprintf(out, "<ifStatement>");
+	fprintf(out, "</ifStatement>");
+}
+
+void compileWhile(FILE *out){
+	fprintf(out, "<whileStatement>");
+	fprintf(out, "</whileStatement>");
+}
+
+void compileDo(FILE *out){
+	fprintf(out, "<doStatement>");
+	fprintf(out, "</doStatement>");
+}
+
+void compileReturn(FILE *out){
+	fprintf(out, "<returnStatement>");
+	fprintf(out, "</returnStatement>");
+}
+
+void compileExpression(FILE *out){
+	fprintf(out, "<expression>");
+	fprintf(out, "</expression>");
+}
+
+void compileTerm(FILE *out){
+	fprintf(out, "<term>");
+	fprintf(out, "</term>");
+}
+
+void compileExpressionList(FILE *out){
+	fprintf(out, "<expressionList>");
+	fprintf(out, "</expressionList>");
+}
 //============================================================================================================
 int main(int argc, char const *argv[])
 {
@@ -363,99 +439,15 @@ int main(int argc, char const *argv[])
 //=============================================================================================================
 		fprintf(outputFile, "<tokens>\n");
 		while(hasMoreTokens(inputFile)){
-			int len = 250;
+			
 			int x;
-			int y;
-			char c;
 			char xmlOut[250];
-			advance(inputFile, token, len, &stringFlag);
-			x = tokenType(token, stringFlag);
 
+			advance(inputFile, token, &stringFlag);
+			x = tokenType(token, stringFlag);
 			if (x == -1) continue; // skip empty or invalid tokens
 
-			else if(x == SYMBOL){
-				c = symbol(token);
-				if(c == '<'){
-					fprintf(outputFile, "<symbol> &lt; </symbol>\n");
-				}else if(c == '>'){
-					fprintf(outputFile, "<symbol> &gt; </symbol>\n");
-				}else if(c == '&'){
-					fprintf(outputFile, "<symbol> &amp; </symbol>\n");
-				}else{
-					fprintf(outputFile, "<symbol> %c </symbol>\n",c);
-				}
-			}
-			else if(x == KEYWORD){				
-				 y = keyword(token);
-
-				 if(y == CLASS ){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }else if(y == METHOD ){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == FUNCTION){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == CONSTRUCTOR){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == INTE){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);	
-				 }
-				 else if(y == BOOLEA){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == CHARA){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == VOIDS){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == VAR){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == STATIC){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == FIELD){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == LET){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == DO){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == IF){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == ELSE){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == WHILE){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == FALS){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == RETURN){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == NUL){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-				 else if(y == THIS){
-				 	fprintf(outputFile, "<keyword> %s </keyword>\n",token);
-				 }
-
-			}else if(x == STRING_CONST){
-				fprintf(outputFile, "<stringConst> %s </stringConst>\n",token);
-			}else if(x == INT_CONST){
-				fprintf(outputFile, "<intConst> %s </intConst>\n",token);
-			}else if(x == IDENTIFIER){
-				fprintf(outputFile, "<identifier> %s </identifier>\n",token);
-			}
-		} 
+		}
 		fprintf(outputFile, "</tokens>\n");
 //=====================================================================================================================
 		fclose(inputFile);
@@ -508,13 +500,34 @@ int main(int argc, char const *argv[])
 //=======================================================================================================================
 				fprintf(F_OutputFile, "<tokens>\n");
 				while(hasMoreTokens(folderFile)){
-					int len = 250;
+					
 					int x;
-					int y;
-					char c;
+					
 					char xmlOut[250];
-					advance(folderFile, token, len, &stringFlag);
+					
+					//advance gets the next token and places it in *token
+					advance(folderFile, token, &stringFlag);
+					//tokenType returns the type of token that is stored in *token and sets x to one of the #define token values
 					x = tokenType(token, stringFlag);
+					if (x == -1) continue; // skip empty or invalid tokens
+
+
+				}
+
+				fprintf(F_OutputFile, "</tokens>\n");
+//================================================================================================================================
+				fclose(folderFile);
+				fclose(F_OutputFile);
+			}
+		}
+		closedir(folder);
+	}
+
+	return 0;
+}
+
+
+/*
 					if (x == -1) continue; // skip empty or invalid tokens
 					else if(x == SYMBOL){
 						c = symbol(token);
@@ -598,14 +611,4 @@ int main(int argc, char const *argv[])
 						fprintf(F_OutputFile, "<identifier> %s </identifier>\n",token);
 					}
 				} 
-				fprintf(F_OutputFile, "</tokens>\n");
-//================================================================================================================================
-				fclose(folderFile);
-				fclose(F_OutputFile);
-			}
-		}
-		closedir(folder);
-	}
-
-	return 0;
-}
+				*/

@@ -105,6 +105,7 @@
 <identifier> j </identifier>
 <symbol> = </symbol>
 <identifier> j </identifier>
+<symbol> / </symbol>
 <symbol> ( </symbol>
 <symbol> - </symbol>
 <intConst> 2 </intConst>
