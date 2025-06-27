@@ -327,16 +327,113 @@ void make_output_filename(const char *input_filename, char *output_filename, siz
     output_filename[base_len] = '\0';
     strncat(output_filename, "T.xml", size - base_len - 1);
 }
+
+void printXmlToken(int tokenDefinedbyX, FILE *outXML){
+	int x;
+	if(x == SYMBOL){
+		char c = symbol(token);
+		if(c == '<'){
+			fprintf(outXML, "<symbol> &lt; </symbol>\n");
+		}else if(c == '>'){
+			fprintf(outXML, "<symbol> &gt; </symbol>\n");
+		}else if(c == '&'){
+			fprintf(outXML, "<symbol> &amp; </symbol>\n");
+		}else{
+			fprintf(outXML, "<symbol> %c </symbol>\n",c);
+		}
+	}
+	else if(x == KEYWORD){				
+		int y = keyword(token);
+		if( y == CLASS){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}else if(y == METHOD ){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == FUNCTION){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == CONSTRUCTOR){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == INTE){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);	
+		}
+		else if(y == BOOLEA){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == CHARA){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == VOIDS){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == VAR){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == STATIC){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == FIELD){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == LET){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == DO){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == IF){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == ELSE){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == WHILE){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == FALS){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == RETURN){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == NUL){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+		else if(y == THIS){
+			fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		}
+	}
+	else if(x == STRING_CONST){
+		fprintf(outXML, "<stringConst> %s </stringConst>\n",token);
+	}else if(x == INT_CONST){
+		fprintf(outXML, "<intConst> %s </intConst>\n",token);
+	}else if(x == IDENTIFIER){
+		fprintf(outXML, "<identifier> %s </identifier>\n",token);
+	}
+}	
+
+
 void process(char *process,  FILE *in,  FILE *out) {
 	if(strcmp(token,process)==0) {
-		fprintf(out, "<%sStatement>\n",process);
+
+		int x = tokenType(token, stringFlag);
+		printXmlToken(x, out);
+		
 		if(hasMoreTokens(in)){
 			advance(in, token, &stringFlag);
 		}
 	}
 }
-void compileClass(FILE *out){
+void compileClass(FILE *in, FILE *out){
 	fprintf(out, "<class>");
+	process("class", in, out);
+	
+
+
+	process("{", in, out);
+	process("}", in, out);
+
 	fprintf(out, "</class>");
 }
 
@@ -527,88 +624,4 @@ int main(int argc, char const *argv[])
 }
 
 
-/*
-					if (x == -1) continue; // skip empty or invalid tokens
-					else if(x == SYMBOL){
-						c = symbol(token);
-						if(c == '<'){
-							fprintf(F_OutputFile, "<symbol> &lt; </symbol>\n");
-						}else if(c == '>'){
-							fprintf(F_OutputFile, "<symbol> &gt; </symbol>\n");
-						}else if(c == '&'){
-							fprintf(F_OutputFile, "<symbol> &amp; </symbol>\n");
-						}else{
-						fprintf(F_OutputFile, "<symbol> %c </symbol>\n",c);
-						}
-					}
-					else if(x == KEYWORD){				
-				 		y = keyword(token);
-						if(y == CLASS ){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}else if(y == METHOD ){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-						 else if(y == FUNCTION){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == CONSTRUCTOR){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-						 }
-						else if(y == INTE){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);	
-				 		}
-				 		else if(y == BOOLEA){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == CHARA){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == VOIDS){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == VAR){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == STATIC){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == FIELD){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == LET){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == DO){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == IF){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == ELSE){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == WHILE){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == FALS){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == RETURN){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == NUL){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-				 		else if(y == THIS){
-				 			fprintf(F_OutputFile, "<keyword> %s </keyword>\n",token);
-				 		}
-
-					}else if(x == STRING_CONST){
-						fprintf(F_OutputFile, "<stringConst> %s </stringConst>\n",token);
-					}else if(x == INT_CONST){
-						fprintf(F_OutputFile, "<intConst> %s </intConst>\n",token);
-					}else if(x == IDENTIFIER){
-						fprintf(F_OutputFile, "<identifier> %s </identifier>\n",token);
-					}
-				} 
-				*/
+		
