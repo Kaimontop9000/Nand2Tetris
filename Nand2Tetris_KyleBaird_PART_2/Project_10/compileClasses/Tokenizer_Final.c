@@ -41,7 +41,7 @@ Usage - ./Tokenizer_01 <filename.jack/folderName>
 
 char token[250];			//used to hold the token 
 int stringFlag;				//used for string constants, because we remove the "" from the string, this flag helps us to differentiate
-							//between identifiers. Flag is set in advance() and is tested in the tokenType()
+							//between identifiers. Flag is set in advance() and is tested in the tokenType(), i could take the flag and make it a local variable for the keyword type function. by copying the strinf with """ and then ky removjng them qhen needed.
 int len = 250;
 
 /*hasMoreTokens() skips over whitespace and returns if a valid character is found. I think it only skips over the first initial whitespace
