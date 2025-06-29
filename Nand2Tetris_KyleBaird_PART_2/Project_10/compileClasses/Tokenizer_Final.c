@@ -58,7 +58,7 @@ int hasMoreTokens(FILE *input){
 	return 0;
 }
 
-/* advance() only called if hasMoreTokens() returns true. Takes a FILE pointer to read in the next token, 
+/* yoken generation/creation : advance() only called if hasMoreTokens() returns true. Takes a FILE pointer to read in the next token, 
 	a char string[] to hold the token, maxLen for buffer overflow and a global flag that is used to for string constants(this helps
 	differentiate between string constants and identifiers because we eliminat the "" from string constants */
 
