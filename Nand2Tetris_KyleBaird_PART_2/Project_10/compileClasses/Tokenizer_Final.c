@@ -82,7 +82,7 @@ void make_output_filename(const char *input_filename, char *output_filename, siz
 
 char token[250];			//used to hold the token 
 int stringFlag;				//used for string constants, because we remove the "" from the string, this flag helps us to differentiate
-							//between identifiers. Flag is set in advance() and is tested in the tokenType()
+							//between identifiers. Flag is set in advance() and is tested in the tokenType(), i could take the flag and make it a local variable for the keyword type function. by copying the strinf with """ and then ky removjng them qhen needed.
 int len = 250;
 
 /*hasMoreTokens() skips over whitespace and returns if a valid character is found. I think it only skips over the first initial whitespace
@@ -99,7 +99,7 @@ int hasMoreTokens(FILE *input){
 	return 0;
 }
 
-/* advance() only called if hasMoreTokens() returns true. Takes a FILE pointer to read in the next token, 
+/* yoken generation/creation : advance() only called if hasMoreTokens() returns true. Takes a FILE pointer to read in the next token, 
 	a char string[] to hold the token, maxLen for buffer overflow and a global flag that is used to for string constants(this helps
 	differentiate between string constants and identifiers because we eliminat the "" from string constants */
 
