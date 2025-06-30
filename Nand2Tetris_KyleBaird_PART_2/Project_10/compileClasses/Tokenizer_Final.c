@@ -1,6 +1,47 @@
-/*Created June 01 2025- Last edited June 24 2025
+/*Created June 01 2025- Last edited June 30th 2025
 Jack Tokenizer
+=================================================
 Usage - ./Tokenizer_01 <filename.jack/folderName>
+--------------------------------------------------------------------------------------------------------------------------------------
+Functions:										|Description
+--------------------------------------------------------------------------------------------------------------------------------------
+int hasMoreTokens(FILE *input)					|Reads FILE *input, while not EOF, skips whitespaces until it finds a valid character
+												|to return
+--------------------------------------------------------------------------------------------------------------------------------------												
+int advance(FILE *in, char *string, int *flag)	|Only called if hasMoreTokens returns true. Builds a token. Skips over comments. Does
+												|not keep track of the type of token it creates but it will create valid token types.
+												|There is a flag that is used to represent if "string constants" are found. """ are
+												|not stored in the char *string. If there is """ then flag is true. 
+--------------------------------------------------------------------------------------------------------------------------------------
+int tokenType(char *token, int flag)			|Determines the token type. Returns one of five constants: SYMBOL, KEYWORD, IDENTIFIER,
+												|													INT_CONST, STRING_CONST
+--------------------------------------------------------------------------------------------------------------------------------------												
+int keyword(char *string)
+char symbol(char *string)
+char *identifer(char *string)
+char *intVal(char *string)
+char *stringVal(char *string)
+void printXmlToken(int tokenDefinedbyX, FILE *outXML)
+void process(char *process,  FILE *in,  FILE *out) 
+void compileClass(FILE *in, FILE *out)
+void compileClassVarDec(FILE *out)
+void compileSubroutineDec(FILE *out)
+void compileParamaterList(FILE *out)
+void compileSubroutineBody(FILE *out)
+void compileStatements(FILE *out)
+void compileLet(FILE *out)
+void compileIf(FILE *out)
+void compileWhile(FILE *out)
+void compileDo(FILE *out)
+void compileReturn(FILE *out)
+void compileExpression(FILE *out)
+void compileTerm(FILE *out)
+void compileExpressionList(FILE *out)
+------------------------------------------------------
+FILE PROCESSING FUNCTIONS
+------------------------------------------------------
+void make_output_filename(const char *input_filename, char *output_filename, size_t size)
+
 ----------------------------------------------------*/
 
 #include <stdio.h>
