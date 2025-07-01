@@ -3,7 +3,7 @@ Jack Tokenizer
 =================================================
 Usage - ./Tokenizer_01 <filename.jack/folderName>
 --------------------------------------------------------------------------------------------------------------------------------------
-Functions:										|Description
+Token Creation Functions:						|Description
 --------------------------------------------------------------------------------------------------------------------------------------
 int hasMoreTokens(FILE *input)					|Reads FILE *input, while not EOF, skips whitespaces until it finds a valid character
 												|to return
@@ -16,14 +16,59 @@ int advance(FILE *in, char *string, int *flag)	|Only called if hasMoreTokens ret
 int tokenType(char *token, int flag)			|Determines the token type. Returns one of five constants: SYMBOL, KEYWORD, IDENTIFIER,
 												|													INT_CONST, STRING_CONST
 --------------------------------------------------------------------------------------------------------------------------------------												
-int keyword(char *string)
-char symbol(char *string)
-char *identifer(char *string)
-char *intVal(char *string)
-char *stringVal(char *string)
-void printXmlToken(int tokenDefinedbyX, FILE *outXML)
-void process(char *process,  FILE *in,  FILE *out) 
-void compileClass(FILE *in, FILE *out)
+int keyword(char *string)						|Returns the type of KEYWORD : CLASS, METHOD,FUNCTION, CONSTRUCTOR, INTE ,BOOLEA
+												|							CHARA, VOIDS, VAR, STATIC, FIELD, LET, DO, IF, ELSE, 
+												|							WHILE, RETURN, TRU, FALS ,NUL,THIS
+--------------------------------------------------------------------------------------------------------------------------------------
+char symbol(char *string)						|Returns string[0] which is one of the symbols
+--------------------------------------------------------------------------------------------------------------------------------------
+char *identifer(char *string)					|Returns char *string: 
+--------------------------------------------------------------------------------------------------------------------------------------
+char *intVal(char *string)						|Returns char *string: integerConstant
+---------------------------------------------------------------------------------------------------------------------------------------
+char *stringVal(char *string)					|Returns char *string: stringConstant
+---------------------------------------------------------------------------------------------------------------------------------------
+_______________________________________________________________________________________________________________________________________
+LEXICAL ELEMENTS: 5 types of terminal elements(tokens)
+_______________________________________________________________________________________________________________________________________
+KEYWORD: 'class'|'constructor'|'function'|'method'|'field'|'static'|'var'|'int'|'char'|'boolean'|'void'|'true'|'false'|'null'|
+		 'this'	|'let'		  |'do'		 |'if'	  |'else' |'while' |'return'
+_______________________________________________________________________________________________________________________________________
+SYMBOL: '{' | '}' | '(' | ')' | '[' |
+		']' | '.' | ',' | ';' | '+' |
+	    '-' | '*' | '/' | '&' | '|' |	
+	    '<' | '>' | '=' | '~'
+_______________________________________________________________________________________________________________________________________
+INTEGERCONSTANT: decimal integer range 0...32767
+_______________________________________________________________________________________________________________________________________
+STRINGCONSTANT: "sequence of characters not including double quotes or newline"
+_______________________________________________________________________________________________________________________________________
+IDENTIFIER:		 sequence of letters, digits and underscore not starting with a digit.
+_______________________________________________________________________________________________________________________________________
+
+PROGRAM STRUCTURE FUNCTIONS(SENTENCE BUILDING)
+=======================================================================================================================================
+void printXmlToken(int tokenDefinedbyX, FILE *outXML)			|Tests X to see if it matches either one of the 5 token types(as well as
+																|the sub KEYWORD types) X can be found with tokenType. Will print the
+																|token in xml tags along with the token in string format.
+---------------------------------------------------------------------------------------------------------------------------------------
+void process(char *process,  FILE *in,  FILE *out) 				|Tests char *process with the existing token. If they match then 
+																|printXmlToken is called. Afterwards we invoke hasMoreTokens and then
+																|we advance() to get the next token.
+---------------------------------------------------------------------------------------------------------------------------------------
+=======================================================================================================================================
+PROGRAM STRUCTURE: A Jack program is a collection of classes, each appearing in a seperate file. The compilation unit is a class. A class
+					is a sequence of tokens, as follows
+_______________________________________________________________________________________________________________________________________ 
+class: 'class' className '{' classVarDec* subroutineDec* '}'
+classVarDec: ('static'|'field') type varName (';'varName)*
+type:		'int'|'char'|'boolean'| className
+subroutineDec:('constructor'|'function'|'method') ('void'|type) subroutineName '(' parameterList ')' subroutineBody
+
+
+void compileClass(FILE *in, FILE *out)							|Compiles all the lexical elements of the program structure of
+																|a class and outputs this. Recursive
+---------------------------------------------------------------------------------------------------------------------------------------
 void compileClassVarDec(FILE *out)
 void compileSubroutineDec(FILE *out)
 void compileParamaterList(FILE *out)
@@ -37,6 +82,8 @@ void compileReturn(FILE *out)
 void compileExpression(FILE *out)
 void compileTerm(FILE *out)
 void compileExpressionList(FILE *out)
+
+
 ------------------------------------------------------
 FILE PROCESSING FUNCTIONS
 ------------------------------------------------------
@@ -456,6 +503,7 @@ void printXmlToken(int tokenDefinedbyX, FILE *outXML){
 
 
 void process(char *process,  FILE *in,  FILE *out) {
+	
 	if(strcmp(token,process)==0) {
 
 		int x = tokenType(token, stringFlag);
