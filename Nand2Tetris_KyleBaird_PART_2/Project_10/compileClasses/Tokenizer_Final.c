@@ -571,8 +571,9 @@ void process(char *process,  FILE *in,  FILE *out) {
 		}
 	}
 }
-void compileClassVarDec(FILE *in, FILE *out){
+void compileClassVarDec(FILE *in, FILE *out, char *token){
 	fprintf(out, "<classVarDec>");
+
 	int x = tokenType(token, stringFlag);
 
 	if(strcmp(token, "static")==0){
@@ -580,8 +581,41 @@ void compileClassVarDec(FILE *in, FILE *out){
 	}else if(strcmp(token, "field")==0){
 		process("field", in, out);
 	}
+
+		//type is either keyword(int, char or boolean) or identifier(className)
+		x = tokenType(token, stringFlag);
 	
-	fprintf(out, "</classVarDec>");
+		if (x == KEYWORD) {
+			fprintf(out, "<keyword> %s </keyword>\n", token);
+		}
+		else if(x ==  IDENTIFIER){
+			fprintf(out, "<identifier> %s </identifier>\n", token);
+		}
+	
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
+		
+		while(1){
+			x = tokenType(token, stringFlag);
+			if(x == IDENTIFIER){
+				fprintf(out, "<identifier> %s </identifier>\n", token);
+			}
+
+			if(hasMoreTokens(in)){
+				advance(in, token, &stringFlag);
+			}
+
+			if(token[0] == ';'){
+				process(";",token);
+				break;
+			}
+			else if(token[0] == ','){
+				process(",",token);
+				continue;
+			}
+		}	
+	fprintf(out, "</classVarDec>\n");
 }
 
 void compileSubroutineDec(FILE *out){
@@ -597,7 +631,7 @@ void compileClass(FILE *in, FILE *out){
 		fprintf(out, "<className> %s </className/n", token);
 	}
 	process("{", in, out);
-	compileClassVarDec(in,out);
+	compileClassVarDec(in,out, token);
 	compileSubroutineDec(out);
 	process("}", in, out);
 	fprintf(out, "</class>");
@@ -781,4 +815,3 @@ int main(int argc, char const *argv[])
 }
 
 
-		
