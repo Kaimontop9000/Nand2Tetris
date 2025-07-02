@@ -60,11 +60,68 @@ void process(char *process,  FILE *in,  FILE *out) 				|Tests char *process with
 PROGRAM STRUCTURE: A Jack program is a collection of classes, each appearing in a seperate file. The compilation unit is a class. A class
 					is a sequence of tokens, as follows
 _______________________________________________________________________________________________________________________________________ 
-class: 'class' className '{' classVarDec* subroutineDec* '}'
-classVarDec: ('static'|'field') type varName (';'varName)*
-type:		'int'|'char'|'boolean'| className
-subroutineDec:('constructor'|'function'|'method') ('void'|type) subroutineName '(' parameterList ')' subroutineBody
+class: 					|	'class' className '{' classVarDec* subroutineDec* '}'
+--------------------------------------------------------------------------------------------------------------------------------------
+classVarDec:			|	('static'|'field') type varName (';'varName)*
+--------------------------------------------------------------------------------------------------------------------------------------
+type:					|	'int'|'char'|'boolean'| className
+--------------------------------------------------------------------------------------------------------------------------------------						
+subroutineDec:			|	('constructor'|'function'|'method') ('void'|type) subroutineName '(' parameterList ')' subroutineBody
+--------------------------------------------------------------------------------------------------------------------------------------
+parameterList:			|	(type varName) (',' type varName)*)?
+--------------------------------------------------------------------------------------------------------------------------------------
+subroutineBody:			|	'{' varDec* statements '}'
+--------------------------------------------------------------------------------------------------------------------------------------
+varDec:					|	'var' type varName (',' varName)* ';'
+--------------------------------------------------------------------------------------------------------------------------------------
+className:				|	identifier
+--------------------------------------------------------------------------------------------------------------------------------------
+subroutineName:			|	identifier
+--------------------------------------------------------------------------------------------------------------------------------------
+varName:				|	identifier
+--------------------------------------------------------------------------------------------------------------------------------------
+______________________________________________________________________________________________________________________________________
+======================================================================================================================================
+STATEMENTS:
+______________________________________________________________________________________________________________________________________
+statements:				|	statement*
+--------------------------------------------------------------------------------------------------------------------------------------
+statement:				|	letStatement|ifStatement|whileStatement|doStatement|returnStatement
+--------------------------------------------------------------------------------------------------------------------------------------
+letStatement:			|	'let' varName ('')
+--------------------------------------------------------------------------------------------------------------------------------------
+ifStatement				|	'if' '(' expression ')' '{' statements '}' ('else' '{' statements '}')?
+--------------------------------------------------------------------------------------------------------------------------------------
+whileStatement			|	'while' '(' expression ')' '{' statements '}'
+--------------------------------------------------------------------------------------------------------------------------------------
+doStatement				|	'do' subroutineCall ';'
+--------------------------------------------------------------------------------------------------------------------------------------
+returnStatement:		|	'return' expression? ';'
+--------------------------------------------------------------------------------------------------------------------------------------	
+======================================================================================================================================
+EXPRESSIONS:
+______________________________________________________________________________________________________________________________________
+expression:		term(op term)*
 
+term:			integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
+				'(' expression ')' |(unaryOp term) |subroutineCall
+
+subroutineCall: subroutineName '(' expressionList ')' | (className|varName)'.'subroutineName '(' expressionList ')'
+
+expressionList:	(expression(',' expression)*)?
+
+op:				'+' | '-' | '*' | '/' | '&' | '|' | '<' | '>' | '=' 
+
+unaryOp:		'-' | '~'
+
+keywordConstant:'true' | 'false' | 'null' | 'this'
+----------------------------------------------------------------------------------------------------------------------------------------
+'xxx':	Represents language tokens that appear verbatim
+xxx:	Represents names of terminal and nonterminal elements
+():		used for grouping
+x|y:	either x or y
+x?:		x appears 0 or 1 times
+x*:		x appears 0 or more times
 
 void compileClass(FILE *in, FILE *out)							|Compiles all the lexical elements of the program structure of
 																|a class and outputs this. Recursive
@@ -514,20 +571,16 @@ void process(char *process,  FILE *in,  FILE *out) {
 		}
 	}
 }
-void compileClass(FILE *in, FILE *out){
-	fprintf(out, "<class>");
-	process("class", in, out);
-	
-
-
-	process("{", in, out);
-	process("}", in, out);
-
-	fprintf(out, "</class>");
-}
-
-void compileClassVarDec(FILE *out){
+void compileClassVarDec(FILE *in, FILE *out){
 	fprintf(out, "<classVarDec>");
+	int x = tokenType(token, stringFlag);
+
+	if(strcmp(token, "static")==0){
+		process("static", in, out);
+	}else if(strcmp(token, "field")==0){
+		process("field", in, out);
+	}
+	
 	fprintf(out, "</classVarDec>");
 }
 
@@ -535,6 +588,21 @@ void compileSubroutineDec(FILE *out){
 	fprintf(out, "<subroutineDec>");
 	fprintf(out, "</subroutineDec>");
 }
+
+void compileClass(FILE *in, FILE *out){
+	fprintf(out, "<class>");
+	process("class", in, out);
+	int x = tokenType(token, stringFlag);
+	if(x == IDENTIFIER){
+		fprintf(out, "<className> %s </className/n", token);
+	}
+	process("{", in, out);
+	compileClassVarDec(in,out);
+	compileSubroutineDec(out);
+	process("}", in, out);
+	fprintf(out, "</class>");
+}
+
 
 void compileParamaterList(FILE *out){
 	fprintf(out, "<ParameterList>");
