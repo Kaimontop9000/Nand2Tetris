@@ -140,11 +140,22 @@ void compileExpression(FILE *out)
 void compileTerm(FILE *out)
 void compileExpressionList(FILE *out)
 
-
+------------------------------------------------------------------------------------------------------------
+HANDLED BY THE ROUTINES THAT REFER TO THEM
+------------------------------------------------------------------------------------------------------------
+className
+subroutineName
+varName
+Statement
+subroutineCall
+All these have no compilexxx routines.
 ------------------------------------------------------
 FILE PROCESSING FUNCTIONS
 ------------------------------------------------------
 void make_output_filename(const char *input_filename, char *output_filename, size_t size)
+
+file processing handled in main. No functions yet, should probably make functions for 
+file processing.
 
 ----------------------------------------------------*/
 
@@ -565,12 +576,18 @@ void process(char *process,  FILE *in,  FILE *out) {
 
 		int x = tokenType(token, stringFlag);
 		printXmlToken(x, out);
-		
+
 		if(hasMoreTokens(in)){
 			advance(in, token, &stringFlag);
 		}
 	}
 }
+
+void compileParamaterList(FILE *in, FILE *out){
+	fprintf(out, "<ParameterList>");
+	fprintf(out, "</ParameterList>");
+}
+
 void compileClassVarDec(FILE *in, FILE *out, char *token){
 	fprintf(out, "<classVarDec>");
 
@@ -607,19 +624,60 @@ void compileClassVarDec(FILE *in, FILE *out, char *token){
 			}
 
 			if(token[0] == ';'){
-				process(";",token);
+				process(";",in, out);
 				break;
 			}
 			else if(token[0] == ','){
-				process(",",token);
+				process(",",in, out);
 				continue;
 			}
 		}	
 	fprintf(out, "</classVarDec>\n");
 }
 
-void compileSubroutineDec(FILE *out){
+void compileSubroutineBody(FILE *in,FILE *out){
+	fprintf(out, "<subroutineBody>");
+	fprintf(out, "</subroutineBody>");
+}
+
+
+void compileSubroutineDec(FILE *in, FILE *out){
 	fprintf(out, "<subroutineDec>");
+	fprintf(out, "<keyword> %s </keyword>\n", token);
+
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
+	}
+	int x = tokenType(token, stringFlag);
+	if(strcmp(token, "void")==0 || strcmp(token, "int")==0 ||
+		strcmp(token, "char")==0 || strcmp(token, "boolean")==0){
+
+		fprintf(out, "<keyword> %s </keyword>\n", token);
+	}else if(x == IDENTIFIER){
+		fprintf(out, "<identifier> %s </identifier>\n", token);
+	}
+
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
+	}
+	x = tokenType(token, stringFlag);
+	if(x == IDENTIFIER){
+		fprintf(out, "<identifier> %s </identifier>\n", token);
+	}
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
+	}
+	process( "(" , in, out);
+	compileParamaterList(in, out);
+	process( ")" , in, out);
+	compileSubroutineBody(in, out);
+
+
+
+		
+		
+
+
 	fprintf(out, "</subroutineDec>");
 }
 
@@ -632,21 +690,28 @@ void compileClass(FILE *in, FILE *out){
 	}
 	process("{", in, out);
 	compileClassVarDec(in,out, token);
-	compileSubroutineDec(out);
+
+	while(1){
+		if(strcmp(token, "static")==0 || strcmp(token, "field")==0){
+			compileClassVarDec(in,out,token);
+		}else{
+			break;
+		}
+		
+	}
+	if(strcmp(token, "constructor")==0 || strcmp(token, "function")==0 ||
+		strcmp(token, "method")){
+		compileSubroutineDec(in, out);
+	}else{
+		printf("Error\n");
+	}
 	process("}", in, out);
 	fprintf(out, "</class>");
 }
 
 
-void compileParamaterList(FILE *out){
-	fprintf(out, "<ParameterList>");
-	fprintf(out, "</ParameterList>");
-}
 
-void compileSubroutineBody(FILE *out){
-	fprintf(out, "<subroutineBody>");
-	fprintf(out, "</subroutineBody>");
-}
+
 
 void compileStatements(FILE *out){
 	fprintf(out, "<statements>");
