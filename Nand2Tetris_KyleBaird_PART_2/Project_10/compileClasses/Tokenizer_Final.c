@@ -585,6 +585,53 @@ void process(char *process,  FILE *in,  FILE *out) {
 
 void compileParamaterList(FILE *in, FILE *out){
 	fprintf(out, "<ParameterList>");
+	int x = tokenType(token, stringFlag);
+	//type
+	if(strcmp(token, "int")==0 || strcmp(token, "char")==0
+		|| strcmp(token, "boolean")==0){
+		fprintf(out, "<keyword> %s </keyword>\n", token);
+	}else if(x == IDENTIFIER){
+		fprintf(out, "<identifier> %s </identifier>\n", token);
+	}else if(token == ")"){
+		return;
+	}
+	if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
+	//varName
+	x = tokenType(token, stringFlag);
+	if(x == IDENTIFIER){
+		fprintf(out, "<identifier> %s </identifier>\n", token);
+	}
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
+	}
+	while(1){
+		if(token == ","){
+			process(",",in,out);
+			x = tokenType(token, stringFlag);
+			if(strcmp(token, "int")==0 || strcmp(token, "char")==0
+			|| strcmp(token, "boolean")==0){
+				fprintf(out, "<keyword> %s </keyword>\n", token);
+			}else if(x == IDENTIFIER){
+				fprintf(out, "<identifier> %s </identifier>\n", token);
+			}
+			if(hasMoreTokens(in)){
+				advance(in, token, &stringFlag);
+			}
+			//varName
+			x = tokenType(token, stringFlag);
+			if(x == IDENTIFIER){
+				fprintf(out, "<identifier> %s </identifier>\n", token);
+			}
+			if(hasMoreTokens(in)){
+				advance(in, token, &stringFlag);
+			}
+		}else if(token == ")"){
+			break;
+		}
+	}
+
 	fprintf(out, "</ParameterList>");
 }
 
@@ -671,13 +718,7 @@ void compileSubroutineDec(FILE *in, FILE *out){
 	compileParamaterList(in, out);
 	process( ")" , in, out);
 	compileSubroutineBody(in, out);
-
-
-
 		
-		
-
-
 	fprintf(out, "</subroutineDec>");
 }
 
@@ -689,21 +730,24 @@ void compileClass(FILE *in, FILE *out){
 		fprintf(out, "<className> %s </className/n", token);
 	}
 	process("{", in, out);
-	compileClassVarDec(in,out, token);
 
 	while(1){
 		if(strcmp(token, "static")==0 || strcmp(token, "field")==0){
 			compileClassVarDec(in,out,token);
+
 		}else{
 			break;
 		}
 		
 	}
-	if(strcmp(token, "constructor")==0 || strcmp(token, "function")==0 ||
-		strcmp(token, "method")){
-		compileSubroutineDec(in, out);
-	}else{
-		printf("Error\n");
+
+	while(1){
+		if(strcmp(token, "constructor")==0 || strcmp(token, "function")==0 ||
+			strcmp(token, "method")){
+			compileSubroutineDec(in, out);
+		}else{
+			printf("Error\n");
+		}
 	}
 	process("}", in, out);
 	fprintf(out, "</class>");
