@@ -583,6 +583,51 @@ void process(char *process,  FILE *in,  FILE *out) {
 	}
 }
 
+void compileStatements(FILE *out){
+	fprintf(out, "<statements>");
+	fprintf(out, "</statements>");
+}
+
+void compileLet(FILE *in,FILE *out){
+	fprintf(out, "<letStatement>");
+	fprintf(out, "</letStatement>");
+}
+
+void compileIf(FILE *in,FILE *out){
+	fprintf(out, "<ifStatement>");
+	fprintf(out, "</ifStatement>");
+}
+
+void compileWhile(FILE * in,FILE *out){
+	fprintf(out, "<whileStatement>");
+	fprintf(out, "</whileStatement>");
+}
+
+void compileDo(FILE *in,FILE *out){
+	fprintf(out, "<doStatement>");
+	fprintf(out, "</doStatement>");
+}
+
+void compileReturn(FILE * in, FILE *out){
+	fprintf(out, "<returnStatement>");
+	fprintf(out, "</returnStatement>");
+}
+
+void compileExpression(FILE *in,FILE *out){
+	fprintf(out, "<expression>");
+	fprintf(out, "</expression>");
+}
+
+void compileTerm(FILE * in,FILE *out){
+	fprintf(out, "<term>");
+	fprintf(out, "</term>");
+}
+
+void compileExpressionList(FILE *in,FILE *out){
+	fprintf(out, "<expressionList>");
+	fprintf(out, "</expressionList>");
+}
+
 void compileParamaterList(FILE *in, FILE *out){
 	fprintf(out, "<ParameterList>");
 	int x = tokenType(token, stringFlag);
@@ -634,7 +679,47 @@ void compileParamaterList(FILE *in, FILE *out){
 
 	fprintf(out, "</ParameterList>");
 }
-
+void compileVarDec(FILE *in, FILE *out){
+	fprintf(out, "<varDec>");
+	//var
+	process("var", in, out);
+	//type
+	int x = tokenType(token, stringFlag);
+	if(x == IDENTIFIER){
+		fprintf(out, "<identifier> %s </identifier>", token);
+	}else if(strcmp(token, "int")==0||strcmp(token,"char")==0||
+		strcmp(token, "boolean")==0){
+		fprintf(out, "<keyword> %s </keyword>", token);
+	}
+	//varName
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
+	}
+	x = tokenType(token, stringFlag);
+	if(x == IDENTIFIER){
+		fprintf(out, "<identifier> %s </identifier>", token);
+	}
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
+	}
+	while(1){
+		if(token == ","){
+			process(",", in, out);
+			
+			x = tokenType(token, stringFlag);
+			if(x == IDENTIFIER){
+				fprintf(out, "<identifier> %s </identifier>", token);
+			}
+			if(hasMoreTokens(in)){
+				advance(in, token, &stringFlag);
+			}
+		}else if(token == ";"){
+			process(";", in, out);
+			break;
+		}
+	}
+	fprintf(out, "</varDec>");
+}
 void compileClassVarDec(FILE *in, FILE *out, char *token){
 	fprintf(out, "<classVarDec>");
 
@@ -684,6 +769,27 @@ void compileClassVarDec(FILE *in, FILE *out, char *token){
 
 void compileSubroutineBody(FILE *in,FILE *out){
 	fprintf(out, "<subroutineBody>");
+	process("{", in, out);
+	while(strcmp(token, "var")){
+		compileVarDec(in, out);
+	}
+	while(1){
+		if(strcmp(token, "let")==0){
+			compileLet(in,out);
+		}else if(strcmp(token, "if")==0){
+			compileIf(in, out);
+		}else if(strcmp(token, "while")==0){
+			compileWhile(in, out);
+		}else if(strcmp(token, "do")==0){
+			compileDo(in, out);
+		}else if(strcmp(token, "return")==0){
+			compileReturn(in, out);
+		}else if(token == "}"){
+			break;
+		}else{
+			fprintf(out, "ERROR\n");
+		}
+	}
 	fprintf(out, "</subroutineBody>");
 }
 
@@ -751,55 +857,6 @@ void compileClass(FILE *in, FILE *out){
 	}
 	process("}", in, out);
 	fprintf(out, "</class>");
-}
-
-
-
-
-
-void compileStatements(FILE *out){
-	fprintf(out, "<statements>");
-	fprintf(out, "</statements>");
-}
-
-void compileLet(FILE *out){
-	fprintf(out, "<letStatement>");
-	fprintf(out, "</letStatement>");
-}
-
-void compileIf(FILE *out){
-	fprintf(out, "<ifStatement>");
-	fprintf(out, "</ifStatement>");
-}
-
-void compileWhile(FILE *out){
-	fprintf(out, "<whileStatement>");
-	fprintf(out, "</whileStatement>");
-}
-
-void compileDo(FILE *out){
-	fprintf(out, "<doStatement>");
-	fprintf(out, "</doStatement>");
-}
-
-void compileReturn(FILE *out){
-	fprintf(out, "<returnStatement>");
-	fprintf(out, "</returnStatement>");
-}
-
-void compileExpression(FILE *out){
-	fprintf(out, "<expression>");
-	fprintf(out, "</expression>");
-}
-
-void compileTerm(FILE *out){
-	fprintf(out, "<term>");
-	fprintf(out, "</term>");
-}
-
-void compileExpressionList(FILE *out){
-	fprintf(out, "<expressionList>");
-	fprintf(out, "</expressionList>");
 }
 //============================================================================================================
 int main(int argc, char const *argv[])
