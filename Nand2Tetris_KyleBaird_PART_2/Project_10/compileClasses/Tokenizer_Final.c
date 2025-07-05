@@ -585,7 +585,9 @@ void process(char *process,  FILE *in,  FILE *out) {
 /*letStatement: 'let' varName ('[' expression ']')? '=' expression ';'*/
 void compileLet(FILE *in,FILE *out){
 	fprintf(out, "<letStatement>");
+	//let
 	process("let",in,out);
+	//varName
 	int x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
 		fprintf(out,"<identifier> %s\n </identifier>",token);
@@ -595,15 +597,20 @@ void compileLet(FILE *in,FILE *out){
 	if(hasMoreTokens(in)){
 		advance(in, token, &stringFlag);
 	}
-	if(token == "["){
-		char *tokenLookAhead1;
-		
-		process("[",in,out);
+	
+	process("=", in, out);
+	x = tokenType(token, stringFlag);
 
-		process("]", in, out);
-	}else if(token == "="){
-		process("=", in, out);
+	fprintf(out, "<expression>\n");
+	if(x == INT_CONST){
+		fprintf(out, "</integerConstant> %s </intConstant\n",token);
+	}else if(x == STRING_CONST){
+		fprintf(out, "<stringConst %s\n </stringConst",token);
+	}else if(x == IDENTIFIER){
+		fprintf(out, "<identifier %s </identifier>\n",token);
 	}
+	fprintf(out, "</expression>\n");
+
 	fprintf(out, "</letStatement>");
 }
 
