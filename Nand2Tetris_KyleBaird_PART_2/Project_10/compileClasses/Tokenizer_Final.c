@@ -88,7 +88,7 @@ statements:				|	statement*
 --------------------------------------------------------------------------------------------------------------------------------------
 statement:				|	letStatement|ifStatement|whileStatement|doStatement|returnStatement
 --------------------------------------------------------------------------------------------------------------------------------------
-letStatement:			|	'let' varName ('')
+letStatement:			|	'let' varName ('[' expression ']')? '=' expression ';'
 --------------------------------------------------------------------------------------------------------------------------------------
 ifStatement				|	'if' '(' expression ')' '{' statements '}' ('else' '{' statements '}')?
 --------------------------------------------------------------------------------------------------------------------------------------
@@ -582,14 +582,28 @@ void process(char *process,  FILE *in,  FILE *out) {
 		}
 	}
 }
-
-void compileStatements(FILE *out){
-	fprintf(out, "<statements>");
-	fprintf(out, "</statements>");
-}
-
+/*letStatement: 'let' varName ('[' expression ']')? '=' expression ';'*/
 void compileLet(FILE *in,FILE *out){
 	fprintf(out, "<letStatement>");
+	process("let",in,out);
+	int x = tokenType(token, stringFlag);
+	if(x == IDENTIFIER){
+		fprintf(out,"<identifier> %s\n </identifier>",token);
+	}else{
+		printf("ERROR\n");
+	}
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
+	}
+	if(token == "["){
+		char *tokenLookAhead1;
+		
+		process("[",in,out);
+
+		process("]", in, out);
+	}else if(token == "="){
+		process("=", in, out);
+	}
 	fprintf(out, "</letStatement>");
 }
 
@@ -628,6 +642,24 @@ void compileExpressionList(FILE *in,FILE *out){
 	fprintf(out, "</expressionList>");
 }
 
+
+void compileStatements(FILE *in,FILE *out){
+	fprintf(out, "<statements>");
+	if(strcmp(token, "let")==0){
+			compileLet(in,out);
+		}else if(strcmp(token, "if")==0){
+			compileIf(in, out);
+		}else if(strcmp(token, "while")==0){
+			compileWhile(in, out);
+		}else if(strcmp(token, "do")==0){
+			compileDo(in, out);
+		}else if(strcmp(token, "return")==0){
+			compileReturn(in, out);
+		}else{
+			fprintf(out, "ERROR\n");
+		}
+	fprintf(out, "</statements>");
+}
 void compileParamaterList(FILE *in, FILE *out){
 	fprintf(out, "<ParameterList>");
 	int x = tokenType(token, stringFlag);
@@ -767,29 +799,32 @@ void compileClassVarDec(FILE *in, FILE *out, char *token){
 	fprintf(out, "</classVarDec>\n");
 }
 
+//subroutineBody: '{' varDec* statements '}'
 void compileSubroutineBody(FILE *in,FILE *out){
 	fprintf(out, "<subroutineBody>");
 	process("{", in, out);
+
 	while(strcmp(token, "var")){
 		compileVarDec(in, out);
 	}
 	while(1){
 		if(strcmp(token, "let")==0){
-			compileLet(in,out);
+			compileStatements(in,out);
 		}else if(strcmp(token, "if")==0){
-			compileIf(in, out);
+			compileStatements(in, out);
 		}else if(strcmp(token, "while")==0){
-			compileWhile(in, out);
+			compileStatements(in, out);
 		}else if(strcmp(token, "do")==0){
-			compileDo(in, out);
+			compileStatements(in, out);
 		}else if(strcmp(token, "return")==0){
-			compileReturn(in, out);
+			compileStatements(in, out);
 		}else if(token == "}"){
 			break;
 		}else{
 			fprintf(out, "ERROR\n");
 		}
 	}
+	process("}",in, out);
 	fprintf(out, "</subroutineBody>");
 }
 
