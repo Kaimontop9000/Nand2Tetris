@@ -568,6 +568,85 @@ void printXmlToken(int tokenDefinedbyX, FILE *outXML){
 		fprintf(outXML, "<identifier> %s </identifier>\n",token);
 	}
 }	
+
+void process(char *process,  FILE *in,  FILE *out) {
+	
+	if(strcmp(token,process)==0) {
+
+		int x = tokenType(token, stringFlag);
+		printXmlToken(x, out);
+
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
+	}
+}void compileExpressionList(FILE *in,FILE *out){
+	fprintf(out, "<expressionList>\n");
+	fprintf(out, "</expressionList>\n");
+}
+void compileExpression(FILE *in, FILE *out);
+//term: integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
+//	'(' expression ')' |(unaryOp term) |subroutineCall
+void compileTerm(FILE *in, FILE *out){
+	fprintf(out, "<term>\n");
+	char tokenL1[256];
+	//term
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
+	}
+	int x = tokenType(token, stringFlag);
+	if(x == INT_CONST){
+		fprintf(out, "</integerConstant> %s </intConstant\n",token);
+	}else if(x == STRING_CONST){
+		fprintf(out, "<stringConst %s\n </stringConst",token);
+	}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
+	strcmp(token,"null")==0||strcmp(token,"this")==0){
+		fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
+	}else if(x == IDENTIFIER){
+
+		
+		//these two are the irregular lookahead. We must lookahead to determine wether we are
+		//dealing with an array[] or a subroutineCall. We lookead only when token is a varName
+		//or subroutine name. In other words, when we have an identifier as our term.
+
+		if(hasMoreTokens(in)){
+			advance(in, tokenL1, &stringFlag);
+		}
+
+		if(tokenL1 == "["){
+			fprintf(out, "<identifier %s </identifier>\n",token);
+			process("[", in, out);
+			compileExpression(in,out);
+			process("]", in, out);
+		}else if(tokenL1 == "("){
+			process("(", in,out);
+			compileExpressionList(in, out);
+			process(")", in, out);
+		}else if(tokenL1 == "."){
+			process(".", in, out);
+			fprintf(out, "<identifier %s </identifier>\n",token);
+			if(hasMoreTokens(in)){
+				advance(in, tokenL1, &stringFlag);
+			}
+			process("(", in,out);
+			compileExpressionList(in,out);
+			process(")", in,out);
+		}
+
+	}else if(token == "~"|| token == "-"){
+		fprintf(out, "unaryOp %s </unaryOp>\n",token);
+		compileTerm(in,out);
+	}
+	else if(token == "("){
+		process("(",in,out);
+		compileExpression(in, out);
+		process(")", in, out);
+	}
+	else if(token == ";"){
+	}
+	fprintf(out, "</term>\n");
+}
+
 //expression: term(op term)*
 void compileExpression(FILE *in, FILE *out){
 	fprintf(out, "</expression>\n");
@@ -591,94 +670,9 @@ void compileExpression(FILE *in, FILE *out){
 	}
 		fprintf(out, "</expression>\n");
 }
-//term: integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
-//	'(' expression ')' |(unaryOp term) |subroutineCall
-void compileTerm(FILE *in, FILE *out){
-	//term
-	if(hasMoreTokens(in)){
-		advance(in, token, &stringFlag);
-	}
-	if(x == INT_CONST){
-		fprintf(out, "</integerConstant> %s </intConstant\n",token);
-	}else if(x == STRING_CONST){
-		fprintf(out, "<stringConst %s\n </stringConst",token);
-	}else if(x == IDENTIFIER){
-		fprintf(out, "<identifier %s </identifier>\n",token);
-	}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
-	strcmp(token,"null")==0||strcmp(token,"this")==0){
-		fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
-	}
 
-	
 
-				}else if(token == ";"){
-					break;
-				}
-	//(op term)*
-	while(1){
-		if(hasMoreTokens(in)){
-			advance(in, token, &stringFlag);
-		}
-		if(token == "+" || token == "-" || token == "*" || token == "/"
-			||token == "&" || token == "|" || token == "<" || token == ">"
-			|| token == "="){
-		fprintf(out, "<op> %s </op\n",token);
 
-	//if there is an op then we know there must follow a term
-	//perhaps if token == op then int opFlag = 1.
-	//if opFlag is true then we do the next thing?
-	//or are we supposed to recursively call?
-
-		}else if(token == ";"){
-			break;
-		}
-
-		if(hasMoreTokens(in)){
-			advance(in, token, &stringFlag);
-		}
-
-		if(x == INT_CONST){
-			fprintf(out, "</integerConstant> %s </intConstant\n",token);
-		}else if(x == STRING_CONST){
-			fprintf(out, "<stringConst %s\n </stringConst",token);
-		}else if(x == IDENTIFIER){
-			fprintf(out, "<identifier %s </identifier>\n",token);
-		}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
-		strcmp(token,"null")==0||strcmp(token,"this")==0){
-			fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
-		}else if(strcmp(token,"identifier")==0){
-			fprintf(out, "<identifier> %s </identifier>\n",token);
-		}
-	}
-
-	
-}
-			if(x == INT_CONST){
-				fprintf(out, "</integerConstant> %s </intConstant\n",token);
-			}else if(x == STRING_CONST){
-				fprintf(out, "<stringConst %s\n </stringConst",token);
-			}else if(x == IDENTIFIER){
-				fprintf(out, "<identifier %s </identifier>\n",token);
-			}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
-			strcmp(token,"null")==0||strcmp(token,"this")==0){
-				fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
-			}else if(strcmp(token,"identifier")==0){
-				fprintf(out, "<identifier> %s </identifier>\n",token);
-			}
-}
-
-void process(char *process,  FILE *in,  FILE *out) {
-	
-	if(strcmp(token,process)==0) {
-
-		int x = tokenType(token, stringFlag);
-		printXmlToken(x, out);
-
-		if(hasMoreTokens(in)){
-			advance(in, token, &stringFlag);
-		}
-	}
-}
 /*  letStatement: 'let' varName ('[' expression ']')? '=' expression ';'  */
 void compileLet(FILE *in,FILE *out){
 
@@ -737,22 +731,6 @@ void compileReturn(FILE * in, FILE *out){
 	fprintf(out, "<returnStatement>");
 	fprintf(out, "</returnStatement>");
 }
-
-void compileExpression(FILE *in,FILE *out){
-	fprintf(out, "<expression>");
-	fprintf(out, "</expression>");
-}
-
-void compileTerm(FILE * in,FILE *out){
-	fprintf(out, "<term>");
-	fprintf(out, "</term>");
-}
-
-void compileExpressionList(FILE *in,FILE *out){
-	fprintf(out, "<expressionList>");
-	fprintf(out, "</expressionList>");
-}
-
 
 void compileStatements(FILE *in,FILE *out){
 	fprintf(out, "<statements>");
