@@ -200,6 +200,9 @@ int stringFlag;				//used for string constants, because we remove the "" from th
 							//between identifiers. Flag is set in advance() and is tested in the tokenType(), i could take the flag and make it a local variable for the keyword type function. by copying the strinf with """ and then ky removjng them qhen needed.
 int len = 250;
 
+//function declarations
+void compileExpression(FILE *in, FILE *out);
+
 /*hasMoreTokens() skips over whitespace and returns if a valid character is found. I think it only skips over the first initial whitespace
 but because we assume that the source code is error free I hope that there is never double space characters*/
 
@@ -214,7 +217,7 @@ int hasMoreTokens(FILE *input){
 	return 0;
 }
 
-/* yoken generation/creation : advance() only called if hasMoreTokens() returns true. Takes a FILE pointer to read in the next token, 
+/* token generation/creation : advance() only called if hasMoreTokens() returns true. Takes a FILE pointer to read in the next token, 
 	a char string[] to hold the token, maxLen for buffer overflow and a global flag that is used to for string constants(this helps
 	differentiate between string constants and identifiers because we eliminat the "" from string constants */
 
@@ -580,69 +583,99 @@ void process(char *process,  FILE *in,  FILE *out) {
 			advance(in, token, &stringFlag);
 		}
 	}
-}void compileExpressionList(FILE *in,FILE *out){
+}
+
+void compileExpressionList(FILE *in,FILE *out){
 	fprintf(out, "<expressionList>\n");
+	
+	if(token == ")"){
+		fprintf(out, "</expressionList>\n");
+		return;
+	}
+	compileExpression(in,out);
+	while(1){
+		if(token == ","){
+			process(",",in,out);
+			compileExpression(in,out);
+		}else{
+		break;
+		}
+	}
 	fprintf(out, "</expressionList>\n");
 }
-void compileExpression(FILE *in, FILE *out);
+
+
 //term: integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
 //	'(' expression ')' |(unaryOp term) |subroutineCall
 void compileTerm(FILE *in, FILE *out){
 	fprintf(out, "<term>\n");
-	char tokenL1[256];
-	//term
+	
+	///* advance to first token of the term */
 	if(hasMoreTokens(in)){
 		advance(in, token, &stringFlag);
 	}
+
 	int x = tokenType(token, stringFlag);
+
 	if(x == INT_CONST){
-		fprintf(out, "</integerConstant> %s </intConstant\n",token);
+		fprintf(out, "<integerConstant> %s </integerConstant>\n",token);
 	}else if(x == STRING_CONST){
-		fprintf(out, "<stringConst %s\n </stringConst",token);
+		fprintf(out, "<stringConstant> %s </stringConstant>\n",token);
 	}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
 	strcmp(token,"null")==0||strcmp(token,"this")==0){
 		fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
-	}else if(x == IDENTIFIER){
+	}
 
-		
+	else if(x == IDENTIFIER){
+
+		char identifier[256];
+		strcpy(identifier, token); // save it
+
+		int flagL1 = 0;
+		char tokenL1[256];
 		//these two are the irregular lookahead. We must lookahead to determine wether we are
 		//dealing with an array[] or a subroutineCall. We lookead only when token is a varName
 		//or subroutine name. In other words, when we have an identifier as our term.
 
 		if(hasMoreTokens(in)){
-			advance(in, tokenL1, &stringFlag);
+			advance(in, tokenL1, &flagL1);
 		}
 
-		if(tokenL1 == "["){
-			fprintf(out, "<identifier %s </identifier>\n",token);
+		if(strcmp(tokenL1,"[")==0){
+			fprintf(out, "<identifier> %s </identifier>\n",identifier);
 			process("[", in, out);
 			compileExpression(in,out);
 			process("]", in, out);
-		}else if(tokenL1 == "("){
+		}else if(strcmp(tokenL1,"(")==0){
+			fprintf(out, "<identifier> %s </identifier>\n",identifier);
 			process("(", in,out);
 			compileExpressionList(in, out);
 			process(")", in, out);
-		}else if(tokenL1 == "."){
+
+		}else if(strcmp(tokenL1,".")==0){
+			fprintf(out, "<identifier> %s </identifier>\n",identifier);
 			process(".", in, out);
-			fprintf(out, "<identifier %s </identifier>\n",token);
 			if(hasMoreTokens(in)){
-				advance(in, tokenL1, &stringFlag);
+				advance(in, token, &stringFlag);
 			}
+			fprintf(out, "<identifier> %s </identifier>\n",token);
 			process("(", in,out);
 			compileExpressionList(in,out);
 			process(")", in,out);
+		}else {
+			fprintf(out, "<identifier> %s </identifier>\n", identifier);
+			strcpy(token, tokenL1);  // restore token for parent context
+			stringFlag = flagL1;
 		}
 
-	}else if(token == "~"|| token == "-"){
-		fprintf(out, "unaryOp %s </unaryOp>\n",token);
+	}else if(strcmp(token,"~")==0 || strcmp(token,"-")==0){
+		fprintf(out, "<symbol> %s </symbol>\n",token);
 		compileTerm(in,out);
 	}
-	else if(token == "("){
+	else if(strcmp(token,"(")==0){
 		process("(",in,out);
 		compileExpression(in, out);
 		process(")", in, out);
-	}
-	else if(token == ";"){
 	}
 	fprintf(out, "</term>\n");
 }
@@ -659,9 +692,9 @@ void compileExpression(FILE *in, FILE *out){
 		if(hasMoreTokens(in)){
 			advance(in, token, &stringFlag);
 		}
-		if(token == "+" || token == "-" || token == "*" || token == "/"
-		||token == "&" || token == "|" || token == "<" || token == ">"
-		|| token == "="){
+		if(strcmp(token,"+")==0||strcmp(token,"-")==0 ||strcmp(token,"*")==0
+		|| strcmp(token,"/")==0||strcmp(token,"&")==0 ||strcmp(token,"|")==0
+		|| strcmp(token,"<")==0||strcmp(token,">")==0 ||strcmp(token,"=")==0){
 			fprintf(out, "<op> %s </op\n",token);
 		}else{
 			break;
@@ -687,12 +720,13 @@ void compileLet(FILE *in,FILE *out){
 	}else{
 		printf("ERROR\n");
 	}
+
 	if(hasMoreTokens(in)){
 		advance(in, token, &stringFlag);
 	}
 
 
-	if(token == "["){
+	if(strcmp(token,"[")==0){
 		process("[",in,out);
 		compileExpression(in, out);
 		process("]",in,out);
@@ -700,12 +734,12 @@ void compileLet(FILE *in,FILE *out){
 
 			
 	//equal sign
-	if(token == "="){
+	if(strcmp(token,"=")==0){
 		process("=", in, out);
 	}
 	compileExpression(in,out);
 	//;
-	if(token == ";"){
+	if(strcmp(token,";")==0){
 		process(";",in,out);
 	}
 
