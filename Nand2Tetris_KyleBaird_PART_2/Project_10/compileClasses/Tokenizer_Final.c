@@ -569,6 +569,13 @@ void printXmlToken(int tokenDefinedbyX, FILE *outXML){
 	}
 }	
 
+void compileExpression(FILE *in, FILE *out){
+
+}
+
+void compileTerm(FILE *in, FILE *out){
+
+}
 
 void process(char *process,  FILE *in,  FILE *out) {
 	
@@ -584,9 +591,12 @@ void process(char *process,  FILE *in,  FILE *out) {
 }
 /*letStatement: 'let' varName ('[' expression ']')? '=' expression ';'*/
 void compileLet(FILE *in,FILE *out){
+
 	fprintf(out, "<letStatement>");
+
 	//let
 	process("let",in,out);
+
 	//varName
 	int x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
@@ -597,10 +607,75 @@ void compileLet(FILE *in,FILE *out){
 	if(hasMoreTokens(in)){
 		advance(in, token, &stringFlag);
 	}
-	
-	process("=", in, out);
-	x = tokenType(token, stringFlag);
 
+	while(1){
+		//( '[' expression ']' ) ?
+
+		if(token == "["){
+
+			process("[",in,out);
+			if(token == "["){
+				continue;
+			}
+			fprintf(out, "</expression>\n");
+			//term
+			if(x == INT_CONST){
+				fprintf(out, "</integerConstant> %s </intConstant\n",token);
+			}else if(x == STRING_CONST){
+				fprintf(out, "<stringConst %s\n </stringConst",token);
+			}else if(x == IDENTIFIER){
+				fprintf(out, "<identifier %s </identifier>\n",token);
+			}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
+			strcmp(token,"null")==0||strcmp(token,"this")==0){
+				fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
+			}else if(strcmp(token,"identifier")==0){
+				fprintf(out, "<identifier> %s </identifier>\n",token);
+			}
+
+			//(op term)*
+			while(1){
+				if(hasMoreTokens(in)){
+					advance(in, token, &stringFlag);
+				}
+				if(token == "+" || token == "-" || token == "*" || token == "/"
+					||token == "&" || token == "|" || token == "<" || token == ">"
+					|| token == "="){
+				fprintf(out, "<op> %s </op\n",token);
+
+				}else if(token == ";"){
+					break;
+				}
+
+				if(hasMoreTokens(in)){
+					advance(in, token, &stringFlag);
+				}
+
+				if(x == INT_CONST){
+					fprintf(out, "</integerConstant> %s </intConstant\n",token);
+				}else if(x == STRING_CONST){
+					fprintf(out, "<stringConst %s\n </stringConst",token);
+				}else if(x == IDENTIFIER){
+					fprintf(out, "<identifier %s </identifier>\n",token);
+				}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
+				strcmp(token,"null")==0||strcmp(token,"this")==0){
+					fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
+				}else if(strcmp(token,"identifier")==0){
+					fprintf(out, "<identifier> %s </identifier>\n",token);
+				}
+			}
+			process("]",in,out);
+			fprintf(out, "</expression>\n");
+		}
+	}	
+
+	//equal sign
+	else if(token == "="){
+		process("=", in, out);
+	}
+
+	//expression
+	x = tokenType(token, stringFlag);
+	//term
 	fprintf(out, "<expression>\n");
 	if(x == INT_CONST){
 		fprintf(out, "</integerConstant> %s </intConstant\n",token);
@@ -608,10 +683,57 @@ void compileLet(FILE *in,FILE *out){
 		fprintf(out, "<stringConst %s\n </stringConst",token);
 	}else if(x == IDENTIFIER){
 		fprintf(out, "<identifier %s </identifier>\n",token);
+	}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
+	strcmp(token,"null")==0||strcmp(token,"this")==0){
+		fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
+	}else if(strcmp(token,"identifier")==0){
+		fprintf(out, "<identifier> %s </identifier>\n",token);
 	}
-	fprintf(out, "</expression>\n");
 
-	fprintf(out, "</letStatement>");
+	//(op term)*
+	while(1){
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
+		if(token == "+" || token == "-" || token == "*" || token == "/"
+			||token == "&" || token == "|" || token == "<" || token == ">"
+			|| token == "="){
+		fprintf(out, "<op> %s </op\n",token);
+
+	//if there is an op then we know there must follow a term
+	//perhaps if token == op then int opFlag = 1.
+	//if opFlag is true then we do the next thing?
+	//or are we supposed to recursively call?
+
+		}else if(token == ";"){
+			break;
+		}
+
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
+
+		if(x == INT_CONST){
+			fprintf(out, "</integerConstant> %s </intConstant\n",token);
+		}else if(x == STRING_CONST){
+			fprintf(out, "<stringConst %s\n </stringConst",token);
+		}else if(x == IDENTIFIER){
+			fprintf(out, "<identifier %s </identifier>\n",token);
+		}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
+		strcmp(token,"null")==0||strcmp(token,"this")==0){
+			fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
+		}else if(strcmp(token,"identifier")==0){
+			fprintf(out, "<identifier> %s </identifier>\n",token);
+		}
+	}
+
+	fprintf(out, "</expression>\n");
+	//;
+	if(token == ";"){
+		process(";",in,out);
+	}
+
+	fprintf(out, "</letStatement>\n");
 }
 
 void compileIf(FILE *in,FILE *out){
