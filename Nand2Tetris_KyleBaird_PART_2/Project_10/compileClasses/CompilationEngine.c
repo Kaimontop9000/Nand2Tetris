@@ -163,6 +163,7 @@ file processing.
 #include <string.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <stdlib.h>
 
 //TokenType
 #define SYMBOL 0
@@ -204,6 +205,29 @@ int len = 250;
 void compileExpression(FILE *in, FILE *out);
 void compileStatements(FILE *in,FILE *out);
 
+void skipBlockComment(FILE *in) {
+    int c, prev = 0;
+    int count = 0;
+
+    while ((c = fgetc(in)) != EOF) {
+        if (prev == '*' && c == '/') {
+            break;
+        }
+        prev = c;
+
+        count++;
+        if (count % 10000 == 0) {
+            fprintf(stderr, "Skipping block comment... chars read: %d\n", count);
+            fflush(stderr);
+        }
+        if (count > 100000) {
+            fprintf(stderr, "Error: Possibly unterminated block comment\n");
+            exit(1);
+        }
+    }
+}
+
+
 /*hasMoreTokens() skips over whitespace and returns if a valid character is found. I think it only skips over the first initial whitespace
 but because we assume that the source code is error free I hope that there is never double space characters*/
 
@@ -229,7 +253,7 @@ int advance(FILE *in, char *string, int *flag){
 
 	int c;		//holds the next char from FILE pointer
 	int index=0;	//lets us know how far along we are into the token. How many chars we have read in 
-
+	
 	while(x){
 		c=fgetc(in);
 
@@ -241,16 +265,11 @@ int advance(FILE *in, char *string, int *flag){
        				continue;  // start over to get next character
     		} 
     		else if (next == '*') {
-        		// Block comment: skip until closing */
-        		int prev = 0;
-        		while ((c = fgetc(in)) != EOF) {
-            		if (prev == '*' && c == '/') {
-                		break;  // found the end of the comment
-            		}
-            	prev = c;
-        		}
-        	continue;  // start over to get next character
-   			} 
+       			fprintf(stderr, "Found block comment start\n");
+        		skipBlockComment(in);
+       			fprintf(stderr, "Finished skipping block comment\n");
+        		continue;
+   			}   // start over to get next character 
    			else {
    				// Not a comment: treat '/' as symbol
     			ungetc(next, in);
@@ -278,11 +297,14 @@ int advance(FILE *in, char *string, int *flag){
     			return 0;
     			}
 		}
-		else if(isspace(c)){
-			string[index] = '\0';
+		else if (isspace(c)) {
+			if (index == 0) {
+				continue;  // skip leading whitespace
+			}else {
+			string[index] = '\0';  // finish current token
 			x = 0;
 			return 1;
-
+			}
 		}
 		else if(c == '{' || c == '}' || c == '(' || c == ')'|| c == '[' || c == ']' || c == '.' || c == ',' || c == ';' || c == '+' 
 			|| c == '-' || c == '*' || c == '/' || c == '&' || c == '|' || c == '<'|| c == '>' || c == '=' || c == '~'){
@@ -583,7 +605,7 @@ void process(char *process,  FILE *in,  FILE *out) {
 		if(hasMoreTokens(in)){
 			advance(in, token, &stringFlag);
 		}
-	}
+	} 
 }
 
 void compileExpressionList(FILE *in,FILE *out){
@@ -1076,13 +1098,17 @@ void compileClass(FILE *in, FILE *out){
 			break;
 		}		
 	}
-	while(strcmp(token, "constructor") == 0 || 
-    strcmp(token, "function") == 0 || 
-    strcmp(token, "method") == 0) {
-    	compileSubroutineDec(in, out);
-	}
+	while(1){
+		if(strcmp(token, "constructor") == 0 || 
+    	strcmp(token,"function") == 0 || 
+    	strcmp(token,"method") == 0) {
+    		compileSubroutineDec(in, out);
+		}else{
+			break;
+		}
+	}	
 	process("}", in, out);
-	fprintf(out, "</class>");
+	fprintf(out, "</class>\n");
 }
 //============================================================================================================
 int main(int argc, char const *argv[])
