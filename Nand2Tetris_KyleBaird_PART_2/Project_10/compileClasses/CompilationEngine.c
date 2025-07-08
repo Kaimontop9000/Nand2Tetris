@@ -481,16 +481,16 @@ void make_output_filename(const char *input_filename, char *output_filename, siz
     size_t base_len = dot ? (size_t)(dot - input_filename) : strlen(input_filename);
 
     // Make sure there's room for base name + "T.xml" + null terminator
-    if (base_len + 5 >= size) base_len = size - 6;
+    if (base_len + 4 >= size) base_len = size - 5;
 
     strncpy(output_filename, input_filename, base_len);
     output_filename[base_len] = '\0';
-    strncat(output_filename, "T.xml", size - base_len - 1);
+    strncat(output_filename, ".xml", size - base_len - 1);
 }
 
 void printXmlToken(int tokenDefinedbyX, FILE *outXML){
-	int x;
-	if(x == SYMBOL){
+	
+	if(tokenDefinedbyX == SYMBOL){
 		char c = symbol(token);
 		if(c == '<'){
 			fprintf(outXML, "<symbol> &lt; </symbol>\n");
@@ -502,7 +502,7 @@ void printXmlToken(int tokenDefinedbyX, FILE *outXML){
 			fprintf(outXML, "<symbol> %c </symbol>\n",c);
 		}
 	}
-	else if(x == KEYWORD){				
+	else if(tokenDefinedbyX == KEYWORD){				
 		int y = keyword(token);
 		if( y == CLASS){
 			fprintf(outXML, "<keyword> %s </keyword>\n",token);
@@ -564,11 +564,11 @@ void printXmlToken(int tokenDefinedbyX, FILE *outXML){
 			fprintf(outXML, "<keyword> %s </keyword>\n",token);
 		}
 	}
-	else if(x == STRING_CONST){
-		fprintf(outXML, "<stringConst> %s </stringConst>\n",token);
-	}else if(x == INT_CONST){
-		fprintf(outXML, "<intConst> %s </intConst>\n",token);
-	}else if(x == IDENTIFIER){
+	else if(tokenDefinedbyX == STRING_CONST){
+		fprintf(outXML, "<stringConstant> %s </stringConstant>\n",token);
+	}else if(tokenDefinedbyX == INT_CONST){
+		fprintf(outXML, "<intConstant> %s </intConstant>\n",token);
+	}else if(tokenDefinedbyX == IDENTIFIER){
 		fprintf(outXML, "<identifier> %s </identifier>\n",token);
 	}
 }	
@@ -589,13 +589,13 @@ void process(char *process,  FILE *in,  FILE *out) {
 void compileExpressionList(FILE *in,FILE *out){
 	fprintf(out, "<expressionList>\n");
 	
-	if(token == ")"){
+	if(strcmp(token,")")==0){
 		fprintf(out, "</expressionList>\n");
 		return;
 	}
 	compileExpression(in,out);
 	while(1){
-		if(token == ","){
+		if(strcmp(token,",")==0){
 			process(",",in,out);
 			compileExpression(in,out);
 		}else{
@@ -624,7 +624,7 @@ void compileTerm(FILE *in, FILE *out){
 		fprintf(out, "<stringConstant> %s </stringConstant>\n",token);
 	}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
 	strcmp(token,"null")==0||strcmp(token,"this")==0){
-		fprintf(out, "<keywordConstant> %s </keywordConstant>\n",token);
+		fprintf(out, "<keyword> %s </keyword>\n",token);
 	}
 
 	else if(x == IDENTIFIER){
@@ -683,26 +683,24 @@ void compileTerm(FILE *in, FILE *out){
 
 //expression: term(op term)*
 void compileExpression(FILE *in, FILE *out){
-	fprintf(out, "</expression>\n");
+	fprintf(out, "<expression>\n");
 
-	//term
 	compileTerm(in,out);
 	
-	//(op term)*
-	while(1){
+	while(strcmp(token,"+")==0 || strcmp(token,"-")==0 || strcmp(token,"*")==0 ||
+		  strcmp(token,"/")==0 || strcmp(token,"&")==0 || strcmp(token,"|")==0 ||
+		  strcmp(token,"<")==0 || strcmp(token,">")==0 || strcmp(token,"=")==0) {
+
+		fprintf(out, "<symbol> %s </symbol>\n", token);  
 		if(hasMoreTokens(in)){
-			advance(in, token, &stringFlag);
-		}
-		if(strcmp(token,"+")==0||strcmp(token,"-")==0 ||strcmp(token,"*")==0
-		|| strcmp(token,"/")==0||strcmp(token,"&")==0 ||strcmp(token,"|")==0
-		|| strcmp(token,"<")==0||strcmp(token,">")==0 ||strcmp(token,"=")==0){
-			fprintf(out, "<op> %s </op\n",token);
-		}else{
-			break;
+		 	advance(in, token, &stringFlag);
 		}
 		compileTerm(in, out);
+		if(hasMoreTokens(in)){ advance(in, token, &stringFlag);
+		}
 	}
-		fprintf(out, "</expression>\n");
+
+	fprintf(out, "</expression>\n");
 }
 
 
@@ -710,7 +708,7 @@ void compileExpression(FILE *in, FILE *out){
 /*  letStatement: 'let' varName ('[' expression ']')? '=' expression ';'  */
 void compileLet(FILE *in,FILE *out){
 
-	fprintf(out, "<letStatement>");
+	fprintf(out, "<letStatement>\n");
 	//let
 	process("let",in,out);
 
@@ -748,7 +746,7 @@ void compileLet(FILE *in,FILE *out){
 }
 
 void compileIf(FILE *in,FILE *out){
-	fprintf(out, "<ifStatement>");
+	fprintf(out, "<ifStatement>\n");
 	process("if",in,out);
 	process("(",in,out);
 	compileExpression(in,out);
@@ -756,13 +754,13 @@ void compileIf(FILE *in,FILE *out){
 	process("{",in,out);
 	compileStatements(in,out);
 	process("}",in,out);
-	if(strcmp(token,"else")){
+	if(strcmp(token,"else")==0){
 		process("else",in,out);
 		process("{",in,out);
 		compileStatements(in,out);
 		process("}",in,out);
 	}
-	fprintf(out, "</ifStatement>");
+	fprintf(out, "</ifStatement>\n");
 }
 
 void compileWhile(FILE * in,FILE *out){
@@ -816,7 +814,7 @@ void compileReturn(FILE * in, FILE *out){
 	||strcmp(token,"this")==0){
 		
 		compileExpression(in,out);
-	}else if(strcmp(token,";")){
+	}else if(strcmp(token,";")==0){
 		process(";",in,out);
 	}
 
@@ -828,7 +826,12 @@ void compileReturn(FILE * in, FILE *out){
 
 void compileStatements(FILE *in,FILE *out){
 	fprintf(out, "<statements>");
-	if(strcmp(token, "let")==0){
+
+	while (strcmp(token, "let") == 0 || strcmp(token, "if") == 0 ||
+    strcmp(token, "while") == 0 || strcmp(token, "do") == 0 ||
+    strcmp(token, "return") == 0) {
+
+		if(strcmp(token, "let")==0){
 			compileLet(in,out);
 		}else if(strcmp(token, "if")==0){
 			compileIf(in, out);
@@ -841,14 +844,16 @@ void compileStatements(FILE *in,FILE *out){
 		}else{
 			fprintf(out, "ERROR\n");
 		}
+	}
 	fprintf(out, "</statements>");
 }
+
 void compileParamaterList(FILE *in, FILE *out){
 	fprintf(out, "<ParameterList>");
 	int x = tokenType(token, stringFlag);
 	//type
 	if(strcmp(token, "int")==0 || strcmp(token, "char")==0
-		|| strcmp(token, "boolean")==0){
+	|| strcmp(token, "boolean")==0){
 		fprintf(out, "<keyword> %s </keyword>\n", token);
 	}else if(x == IDENTIFIER){
 		fprintf(out, "<identifier> %s </identifier>\n", token);
@@ -867,7 +872,7 @@ void compileParamaterList(FILE *in, FILE *out){
 		advance(in, token, &stringFlag);
 	}
 	while(1){
-		if(token == ","){
+		if(strcmp(token,",")==0){
 			process(",",in,out);
 			x = tokenType(token, stringFlag);
 			if(strcmp(token, "int")==0 || strcmp(token, "char")==0
@@ -887,7 +892,7 @@ void compileParamaterList(FILE *in, FILE *out){
 			if(hasMoreTokens(in)){
 				advance(in, token, &stringFlag);
 			}
-		}else if(token == ")"){
+		}else if(strcmp(token,")")==0){
 			break;
 		}
 	}
@@ -918,7 +923,7 @@ void compileVarDec(FILE *in, FILE *out){
 		advance(in, token, &stringFlag);
 	}
 	while(1){
-		if(token == ","){
+		if(strcmp(token,",")==0){
 			process(",", in, out);
 			
 			x = tokenType(token, stringFlag);
@@ -928,7 +933,7 @@ void compileVarDec(FILE *in, FILE *out){
 			if(hasMoreTokens(in)){
 				advance(in, token, &stringFlag);
 			}
-		}else if(token == ";"){
+		}else if(strcmp(token,";")==0){
 			process(";", in, out);
 			break;
 		}
@@ -987,7 +992,7 @@ void compileSubroutineBody(FILE *in,FILE *out){
 	fprintf(out, "<subroutineBody>");
 	process("{", in, out);
 
-	while(strcmp(token, "var")){
+	while(strcmp(token, "var")==0){
 		compileVarDec(in, out);
 	}
 	while(1){
@@ -1001,7 +1006,7 @@ void compileSubroutineBody(FILE *in,FILE *out){
 			compileStatements(in, out);
 		}else if(strcmp(token, "return")==0){
 			compileStatements(in, out);
-		}else if(token == "}"){
+		}else if(strcmp(token,"}")==0){
 			break;
 		}else{
 			fprintf(out, "ERROR\n");
@@ -1047,11 +1052,19 @@ void compileSubroutineDec(FILE *in, FILE *out){
 }
 
 void compileClass(FILE *in, FILE *out){
-	fprintf(out, "<class>");
+	fprintf(out, "<class>\n");
+	while(hasMoreTokens(in)) {
+    	advance(in, token, &stringFlag); // prime the first token
+    	if (strlen(token) > 0) break;  	
+	}
+	
 	process("class", in, out);
 	int x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
-		fprintf(out, "<className> %s </className/n", token);
+		fprintf(out, "<className> %s </className>\n", token);
+	}
+	if(hasMoreTokens(in)){
+		advance(in, token, &stringFlag);
 	}
 	process("{", in, out);
 
@@ -1063,13 +1076,10 @@ void compileClass(FILE *in, FILE *out){
 			break;
 		}		
 	}
-	while(1){
-		if(strcmp(token, "constructor")==0 || strcmp(token, "function")==0 ||
-			strcmp(token, "method")){
-			compileSubroutineDec(in, out);
-		}else{
-			printf("Error\n");
-		}
+	while(strcmp(token, "constructor") == 0 || 
+    strcmp(token, "function") == 0 || 
+    strcmp(token, "method") == 0) {
+    	compileSubroutineDec(in, out);
 	}
 	process("}", in, out);
 	fprintf(out, "</class>");
@@ -1107,18 +1117,7 @@ int main(int argc, char const *argv[])
 		} 
 	/*Up next is for single file tokenization*/
 //=============================================================================================================
-		fprintf(outputFile, "<tokens>\n");
-		while(hasMoreTokens(inputFile)){
-			
-			int x;
-			char xmlOut[250];
-
-			advance(inputFile, token, &stringFlag);
-			x = tokenType(token, stringFlag);
-			if (x == -1) continue; // skip empty or invalid tokens
-
-		}
-		fprintf(outputFile, "</tokens>\n");
+		compileClass(inputFile, outputFile);
 //=====================================================================================================================
 		fclose(inputFile);
 		fclose(outputFile);
@@ -1168,23 +1167,7 @@ int main(int argc, char const *argv[])
 				}
 	/*Up next is for folder with one or more files tokenization*/
 //=======================================================================================================================
-				fprintf(F_OutputFile, "<tokens>\n");
-				while(hasMoreTokens(folderFile)){
-					
-					int x;
-					
-					char xmlOut[250];
-					
-					//advance gets the next token and places it in *token
-					advance(folderFile, token, &stringFlag);
-					//tokenType returns the type of token that is stored in *token and sets x to one of the #define token values
-					x = tokenType(token, stringFlag);
-					if (x == -1) continue; // skip empty or invalid tokens
-
-
-				}
-
-				fprintf(F_OutputFile, "</tokens>\n");
+				compileClass(folderFile, F_OutputFile);
 //================================================================================================================================
 				fclose(folderFile);
 				fclose(F_OutputFile);
