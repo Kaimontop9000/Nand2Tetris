@@ -743,7 +743,7 @@ void compileLet(FILE *in,FILE *out){
 	//varName
 	int x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
-		fprintf(out,"<identifier> %s\n </identifier>",token);
+		fprintf(out,"<identifier> %s\n </identifier>\n",token);
 	}else{
 		printf("ERROR\n");
 	}
@@ -861,26 +861,28 @@ void compileStatements(FILE *in,FILE *out){
 	while (strcmp(token, "let") == 0 || strcmp(token, "if") == 0 ||
     strcmp(token, "while") == 0 || strcmp(token, "do") == 0 ||
     strcmp(token, "return") == 0) {
-
-		if(strcmp(token, "let")==0){
-			compileLet(in,out);
-		}else if(strcmp(token, "if")==0){
-			compileIf(in, out);
-		}else if(strcmp(token, "while")==0){
-			compileWhile(in, out);
-		}else if(strcmp(token, "do")==0){
-			compileDo(in, out);
-		}else if(strcmp(token, "return")==0){
-			compileReturn(in, out);
-		}else{
-			fprintf(out, "ERROR\n");
+		
+		while(1){
+			if(strcmp(token, "let")==0){
+				compileLet(in,out);
+			}else if(strcmp(token, "if")==0){
+				compileIf(in, out);
+			}else if(strcmp(token, "while")==0){
+				compileWhile(in, out);
+			}else if(strcmp(token, "do")==0){
+				compileDo(in, out);
+			}else if(strcmp(token, "return")==0){
+				compileReturn(in, out);
+			}else{
+				break;
+			}
 		}
 	}
 	fprintf(out, "</statements>");
 }
 
 void compileParamaterList(FILE *in, FILE *out){
-	fprintf(out, "<ParameterList>");
+	fprintf(out, "<ParameterList>\n");
 	int x = tokenType(token, stringFlag);
 	//type
 	if(strcmp(token, "int")==0 || strcmp(token, "char")==0
@@ -890,7 +892,7 @@ void compileParamaterList(FILE *in, FILE *out){
 		fprintf(out, "<identifier> %s </identifier>\n", token);
 	}else if(strcmp(token,")")==0){
 		return;
-	}
+	}	
 	if(hasMoreTokens(in)){
 			advance(in, token, &stringFlag);
 			printf("Token read: '%s'\n", token); 
@@ -935,20 +937,18 @@ void compileParamaterList(FILE *in, FILE *out){
 	fprintf(out, "</ParameterList>");
 }
 void compileVarDec(FILE *in, FILE *out){
-	printf("compileVarDec() called\n");
-	fprintf(out, "<varDec>");
+
+	fprintf(out, "<varDec>\n");
 	//var
 	process("var", in, out);
 	
 	//type
-	if(hasMoreTokens(in)){
-		advance(in, token, &stringFlag);
-		printf("Token read (type): '%s'\n", token);
-	} 
 
 	int x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
-		fprintf(out, "<identifier> %s </identifier>", token);
+		fprintf(out, "<identifier> %s </identifier>\n", token);
+		
+
 	}else if(strcmp(token, "int")==0||strcmp(token,"char")==0||
 		strcmp(token, "boolean")==0){
 		fprintf(out, "<keyword> %s </keyword>", token);
@@ -956,11 +956,14 @@ void compileVarDec(FILE *in, FILE *out){
 	//varName
 	if(hasMoreTokens(in)){
 		advance(in, token, &stringFlag);
-		printf("Token read: '%s'\n", token); 
 	}
 	x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
-		fprintf(out, "<identifier> %s </identifier>", token);
+		fprintf(out, "<identifier> %s </identifier>\n", token);
+
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
 	}
 	
 	while(1){
@@ -969,21 +972,20 @@ void compileVarDec(FILE *in, FILE *out){
 
 			x = tokenType(token, stringFlag);
 			if(x == IDENTIFIER){
-				fprintf(out, "<identifier> %s </identifier>", token);
+				fprintf(out, "<identifier> %s </identifier>\n", token);
 			}
 			if(hasMoreTokens(in)){
-				advance(in, token, &stringFlag);
-				printf("Token read: '%s'\n", token); 
+				advance(in, token, &stringFlag); 
 			}
 		}else if(strcmp(token,";")==0){
 			process(";", in, out);
 			break;
 		}
 	}
-	fprintf(out, "</varDec>");
+	fprintf(out, "</varDec>\n");
 }
 void compileClassVarDec(FILE *in, FILE *out, char *token){
-	fprintf(out, "<classVarDec>");
+	fprintf(out, "<classVarDec>\n");
 
 	int x = tokenType(token, stringFlag);
 
@@ -1033,20 +1035,13 @@ void compileClassVarDec(FILE *in, FILE *out, char *token){
 
 //subroutineBody: '{' varDec* statements '}'
 void compileSubroutineBody(FILE *in,FILE *out){
-	fprintf(out, "<subroutineBody>");
+	fprintf(out, "<subroutineBody>\n");
 	process("{", in, out);
 
 	while(1){
 		if(strcmp(token, "var")==0){
 			compileVarDec(in, out);
-		}else{
-		break;
-		}
-		if (hasMoreTokens(in)) {
-			advance(in, token, &stringFlag);
-		}
-	}	
-		if(strcmp(token, "let")==0){
+		}else if(strcmp(token, "let")==0){
 			compileStatements(in,out);
 		}else if(strcmp(token, "if")==0){
 			compileStatements(in, out);
@@ -1057,15 +1052,16 @@ void compileSubroutineBody(FILE *in,FILE *out){
 		}else if(strcmp(token, "return")==0){
 			compileStatements(in, out);
 		}else{
-			fprintf(out, "ERROR\n");
+			break;
 		}
+	}
 	process("}",in, out);
-	fprintf(out, "</subroutineBody>");
+	fprintf(out, "</subroutineBody>\n");
 }
 
 
 void compileSubroutineDec(FILE *in, FILE *out){
-	fprintf(out, "<subroutineDec>");
+	fprintf(out, "<subroutineDec>\n");
 	printf("Calling subroutineDec\n");
 	fprintf(out, "<keyword> %s </keyword>\n", token);
 
@@ -1094,17 +1090,14 @@ void compileSubroutineDec(FILE *in, FILE *out){
 		advance(in, token, &stringFlag);
 		printf("Token read here: '%s'\n", token); 
 	}
-	printf("expected token (. actual token %s\n", token);
+	
 	process( "(" , in, out);
-	printf("expected token ). actual token '%s'\n", token);
-	printf("Calling ParameterList()\n");
 	compileParamaterList(in, out);
 	process( ")" , in, out);
-	printf("Token after process ): '%s'\n", token);
-	printf("token here is %s\n", token);
+	
 	compileSubroutineBody(in, out);
 		
-	fprintf(out, "</subroutineDec>");
+	fprintf(out, "</subroutineDec>\n");
 }
 
 void compileClass(FILE *in, FILE *out){
