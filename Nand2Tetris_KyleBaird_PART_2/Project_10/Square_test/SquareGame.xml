@@ -1,0 +1,55 @@
+<class>
+<keyword> class </keyword>
+<className> SquareGame </className>
+<symbol> { </symbol>
+<classVarDec>
+<keyword> field </keyword>
+<identifier> Square </identifier>
+<identifier> square </identifier>
+<symbol> ; </symbol>
+</classVarDec>
+<classVarDec>
+<keyword> field </keyword>
+<keyword> int </keyword>
+<identifier> direction </identifier>
+<symbol> ; </symbol>
+</classVarDec>
+<subroutineDec>
+<keyword> constructor </keyword>
+<identifier> SquareGame </identifier>
+<identifier> new </identifier>
+<symbol> ( </symbol>
+<ParameterList>
+<symbol> ) </symbol>
+<subroutineBody>
+<symbol> { </symbol>
+<statements>
+<letStatement>
+<keyword> let </keyword>
+<identifier> square </identifier>
+<symbol> = </symbol>
+<expression>
+<term>
+<identifier> Square </identifier>
+<identifier> new </identifier>
+<expressionList>
+<expression>
+<term>
+<identifier> new </identifier>
+<expressionList>
+<expression>
+<term>
+<identifier> new </identifier>
+</term>
+</expression>
+</expressionList>
+</term>
+</expression>
+</expressionList>
+</term>
+</expression>
+</letStatement>
+</statements>
+</subroutineBody>
+</subroutineDec>
+</class>

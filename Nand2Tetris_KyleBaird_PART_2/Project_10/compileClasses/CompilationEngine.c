@@ -634,20 +634,29 @@ void compileExpressionList(FILE *in,FILE *out){
 void compileTerm(FILE *in, FILE *out){
 	fprintf(out, "<term>\n");
 	
-	///* advance to first token of the term */
-	if(hasMoreTokens(in)){
-		advance(in, token, &stringFlag);
-	}
+	///* advance to first token of the term, !shouldn't have to!*/
+	//if(hasMoreTokens(in)){
+	//	advance(in, token, &stringFlag);
+	//}
 
 	int x = tokenType(token, stringFlag);
 
 	if(x == INT_CONST){
 		fprintf(out, "<integerConstant> %s </integerConstant>\n",token);
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
 	}else if(x == STRING_CONST){
 		fprintf(out, "<stringConstant> %s </stringConstant>\n",token);
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
 	}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
 	strcmp(token,"null")==0||strcmp(token,"this")==0){
 		fprintf(out, "<keyword> %s </keyword>\n",token);
+		if(hasMoreTokens(in)){
+			advance(in, token, &stringFlag);
+		}
 	}
 
 	else if(x == IDENTIFIER){
@@ -657,6 +666,7 @@ void compileTerm(FILE *in, FILE *out){
 
 		int flagL1 = 0;
 		char tokenL1[256];
+		
 		//these two are the irregular lookahead. We must lookahead to determine wether we are
 		//dealing with an array[] or a subroutineCall. We lookead only when token is a varName
 		//or subroutine name. In other words, when we have an identifier as our term.
@@ -743,7 +753,7 @@ void compileLet(FILE *in,FILE *out){
 	//varName
 	int x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
-		fprintf(out,"<identifier> %s\n </identifier>\n",token);
+		fprintf(out,"<identifier> %s </identifier>\n",token);
 	}else{
 		printf("ERROR\n");
 	}
@@ -793,7 +803,7 @@ void compileIf(FILE *in,FILE *out){
 }
 
 void compileWhile(FILE * in,FILE *out){
-	fprintf(out, "<whileStatement>");
+	fprintf(out, "<whileStatement>\n");
 	process("while",in,out);
 	process("(",in,out);
 	compileExpression(in,out);
@@ -856,7 +866,7 @@ void compileReturn(FILE * in, FILE *out){
 }
 
 void compileStatements(FILE *in,FILE *out){
-	fprintf(out, "<statements>");
+	fprintf(out, "<statements>\n");
 
 	while (strcmp(token, "let") == 0 || strcmp(token, "if") == 0 ||
     strcmp(token, "while") == 0 || strcmp(token, "do") == 0 ||
@@ -878,7 +888,7 @@ void compileStatements(FILE *in,FILE *out){
 			}
 		}
 	}
-	fprintf(out, "</statements>");
+	fprintf(out, "</statements>\n");
 }
 
 void compileParamaterList(FILE *in, FILE *out){
