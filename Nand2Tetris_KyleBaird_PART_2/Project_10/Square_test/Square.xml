@@ -30,7 +30,8 @@
 <symbol> , </symbol>
 <keyword> int </keyword>
 <identifier> Asize </identifier>
-</ParameterList><symbol> ) </symbol>
+</ParameterList>
+<symbol> ) </symbol>
 <subroutineBody>
 <symbol> { </symbol>
 <statements>
@@ -67,21 +68,25 @@
 </expression>
 <symbol> ; </symbol>
 </letStatement>
-<doStatement><keyword> do </keyword>
+<doStatement>
+<keyword> do </keyword>
 <identifier> draw </identifier>
 <symbol> ( </symbol>
 <expressionList>
 </expressionList>
 <symbol> ) </symbol>
 <symbol> ; </symbol>
-</doStatement><returnStatement><keyword> return </keyword>
+</doStatement>
+<returnStatement>
+<keyword> return </keyword>
 <expression>
 <term>
 <keyword> this </keyword>
 </term>
 </expression>
 <symbol> ; </symbol>
-</returnStatement></statements>
+</returnStatement
+></statements>
 <symbol> } </symbol>
 </subroutineBody>
 </subroutineDec>
@@ -95,11 +100,11 @@
 <subroutineBody>
 <symbol> { </symbol>
 <statements>
-<doStatement><keyword> do </keyword>
+<doStatement>
+<keyword> do </keyword>
 <identifier> Memory </identifier>
-<identifier> . </identifier>
 <symbol> . </symbol>
-<identifier> ( </identifier>
+<identifier> deAlloc </identifier>
 <symbol> ( </symbol>
 <expressionList>
 <expression>
@@ -110,9 +115,12 @@
 </expressionList>
 <symbol> ) </symbol>
 <symbol> ; </symbol>
-</doStatement><returnStatement><keyword> return </keyword>
+</doStatement>
+<returnStatement>
+<keyword> return </keyword>
 <symbol> ; </symbol>
-</returnStatement></statements>
+</returnStatement
+></statements>
 <symbol> } </symbol>
 </subroutineBody>
 </subroutineDec>
@@ -126,11 +134,11 @@
 <subroutineBody>
 <symbol> { </symbol>
 <statements>
-<doStatement><keyword> do </keyword>
+<doStatement>
+<keyword> do </keyword>
 <identifier> Screen </identifier>
-<identifier> . </identifier>
 <symbol> . </symbol>
-<identifier> ( </identifier>
+<identifier> setColor </identifier>
 <symbol> ( </symbol>
 <expressionList>
 <expression>
@@ -141,16 +149,22 @@
 </expressionList>
 <symbol> ) </symbol>
 <symbol> ; </symbol>
-</doStatement><doStatement><keyword> do </keyword>
+</doStatement>
+<doStatement>
+<keyword> do </keyword>
 <identifier> Screen </identifier>
-<identifier> . </identifier>
 <symbol> . </symbol>
-<identifier> ( </identifier>
+<identifier> drawRectangle </identifier>
 <symbol> ( </symbol>
 <expressionList>
 <expression>
 <term>
 <identifier> x </identifier>
+</term>
+</expression>
+<symbol> , </symbol>
+<expression>
+<term>
 </term>
 </expression>
 <symbol> , </symbol>
@@ -162,16 +176,46 @@
 <symbol> , </symbol>
 <expression>
 <term>
+</term>
+</expression>
+<symbol> , </symbol>
+<expression>
+<term>
 <identifier> x </identifier>
 </term>
 <symbol> + </symbol>
-</expressionList>
+<term>
+</term>
+<symbol> + </symbol>
+<term>
+<identifier> size </identifier>
+</term>
+</expression>
+<symbol> , </symbol>
+<expression>
+<term>
+</term>
+</expression>
+<symbol> , </symbol>
+<expression>
+<term>
+<identifier> y </identifier>
+</term>
+<symbol> + </symbol>
+<term>
+</term>
+<symbol> + </symbol>
 <term>
 <identifier> size </identifier>
 </term>
 </expression>
 </expressionList>
-</doStatement></statements>
+<symbol> ) </symbol>
+Syntax error: expected token ';' but found ')'
+</doStatement>
+</statements>
+Syntax error: expected token '}' but found ')'
 </subroutineBody>
 </subroutineDec>
+Syntax error: expected token '}' but found ')'
 </class>
