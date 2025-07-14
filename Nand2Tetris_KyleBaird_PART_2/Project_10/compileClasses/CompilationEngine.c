@@ -630,6 +630,9 @@ void compileExpressionList(FILE *in,FILE *out){
 	while(1){
 		if(strcmp(token,",")==0){
 			process(",",in,out);
+			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
+		    printf("token read: %s\n",token );
+		}
 			compileExpression(in,out);
 		}else{
 		break;
@@ -749,12 +752,14 @@ void compileExpression(FILE *in, FILE *out){
 		  strcmp(token,"<")==0 || strcmp(token,">")==0 || strcmp(token,"=")==0) {
 
 		fprintf(out, "<symbol> %s </symbol>\n", token);  
-		if(hasMoreTokens(in)){
-		 	advance(in, token, &stringFlag);
-		 	
-		}
+		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
+    			//fprintf(out,"token read after symbol: %s\n",token );
+			}
+		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
+    			//fprintf(out,"token again read after symbol: %s\n",token );
+			}	
+
 		compileTerm(in, out);
-	
 	}
 
 	fprintf(out, "</expression>\n");
@@ -869,6 +874,9 @@ void compileDo(FILE *in,FILE *out){
 		process("(", in,out);
 		compileExpressionList(in,out);
 		process(")", in,out);
+		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
+    			//fprintf(out,"token read after symbol: %s\n",token );
+			}
 	}
 	process(";",in,out);
 	fprintf(out, "</doStatement>\n");
@@ -893,7 +901,7 @@ void compileReturn(FILE * in, FILE *out){
 	if(strcmp(token,";")==0){
 		process(";",in,out);
 	}
-	fprintf(out, "</returnStatement\n>");
+	fprintf(out, "</returnStatement>\n");
 	printf("</returnStatement>\n");
 }
 

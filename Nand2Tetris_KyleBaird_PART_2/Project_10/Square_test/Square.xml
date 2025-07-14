@@ -85,8 +85,8 @@
 </term>
 </expression>
 <symbol> ; </symbol>
-</returnStatement
-></statements>
+</returnStatement>
+</statements>
 <symbol> } </symbol>
 </subroutineBody>
 </subroutineDec>
@@ -114,13 +114,13 @@
 </expression>
 </expressionList>
 <symbol> ) </symbol>
-<symbol> ; </symbol>
+Syntax error: expected token ';' but found 'return'
 </doStatement>
 <returnStatement>
 <keyword> return </keyword>
 <symbol> ; </symbol>
-</returnStatement
-></statements>
+</returnStatement>
+</statements>
 <symbol> } </symbol>
 </subroutineBody>
 </subroutineDec>
@@ -148,7 +148,7 @@
 </expression>
 </expressionList>
 <symbol> ) </symbol>
-<symbol> ; </symbol>
+Syntax error: expected token ';' but found 'do'
 </doStatement>
 <doStatement>
 <keyword> do </keyword>
@@ -165,17 +165,7 @@
 <symbol> , </symbol>
 <expression>
 <term>
-</term>
-</expression>
-<symbol> , </symbol>
-<expression>
-<term>
 <identifier> y </identifier>
-</term>
-</expression>
-<symbol> , </symbol>
-<expression>
-<term>
 </term>
 </expression>
 <symbol> , </symbol>
@@ -185,15 +175,7 @@
 </term>
 <symbol> + </symbol>
 <term>
-</term>
-<symbol> + </symbol>
-<term>
 <identifier> size </identifier>
-</term>
-</expression>
-<symbol> , </symbol>
-<expression>
-<term>
 </term>
 </expression>
 <symbol> , </symbol>
@@ -203,6 +185,79 @@
 </term>
 <symbol> + </symbol>
 <term>
+<identifier> size </identifier>
+</term>
+</expression>
+</expressionList>
+<symbol> ) </symbol>
+<symbol> ; </symbol>
+</doStatement>
+<returnStatement>
+<keyword> return </keyword>
+<symbol> ; </symbol>
+</returnStatement>
+</statements>
+<symbol> } </symbol>
+</subroutineBody>
+</subroutineDec>
+<subroutineDec>
+<keyword> method </keyword>
+<keyword> void </keyword>
+<identifier> erase </identifier>
+<symbol> ( </symbol>
+<ParameterList>
+<symbol> ) </symbol>
+<subroutineBody>
+<symbol> { </symbol>
+<statements>
+<doStatement>
+<keyword> do </keyword>
+<identifier> Screen </identifier>
+<symbol> . </symbol>
+<identifier> setColor </identifier>
+<symbol> ( </symbol>
+<expressionList>
+<expression>
+<term>
+<keyword> false </keyword>
+</term>
+</expression>
+</expressionList>
+<symbol> ) </symbol>
+Syntax error: expected token ';' but found 'do'
+</doStatement>
+<doStatement>
+<keyword> do </keyword>
+<identifier> Screen </identifier>
+<symbol> . </symbol>
+<identifier> drawRectangle </identifier>
+<symbol> ( </symbol>
+<expressionList>
+<expression>
+<term>
+<identifier> x </identifier>
+</term>
+</expression>
+<symbol> , </symbol>
+<expression>
+<term>
+<identifier> y </identifier>
+</term>
+</expression>
+<symbol> , </symbol>
+<expression>
+<term>
+<identifier> x </identifier>
+</term>
+<symbol> + </symbol>
+<term>
+<identifier> size </identifier>
+</term>
+</expression>
+<symbol> , </symbol>
+<expression>
+<term>
+<identifier> y </identifier>
 </term>
 <symbol> + </symbol>
 <term>
@@ -211,11 +266,62 @@
 </expression>
 </expressionList>
 <symbol> ) </symbol>
-Syntax error: expected token ';' but found ')'
+<symbol> ; </symbol>
 </doStatement>
+<returnStatement>
+<keyword> return </keyword>
+<symbol> ; </symbol>
+</returnStatement>
 </statements>
-Syntax error: expected token '}' but found ')'
+<symbol> } </symbol>
 </subroutineBody>
 </subroutineDec>
-Syntax error: expected token '}' but found ')'
+<subroutineDec>
+<keyword> method </keyword>
+<keyword> void </keyword>
+<identifier> incSize </identifier>
+<symbol> ( </symbol>
+<ParameterList>
+<symbol> ) </symbol>
+<subroutineBody>
+<symbol> { </symbol>
+<statements>
+<ifStatement>
+<keyword> if </keyword>
+<symbol> ( </symbol>
+<expression>
+<term>
+<symbol> ( </symbol>
+<expression>
+<term>
+<symbol> ( </symbol>
+<expression>
+<term>
+<identifier> y </identifier>
+</term>
+<symbol> + </symbol>
+<term>
+<identifier> size </identifier>
+</term>
+</expression>
+<symbol> ) </symbol>
+</term>
+</expression>
+<symbol> ) </symbol>
+</term>
+<symbol> < </symbol>
+<term>
+</term>
+</expression>
+<symbol> ) </symbol>
+Syntax error: expected token '{' but found '&'
+<statements>
+</statements>
+Syntax error: expected token '}' but found '&'
+</ifStatement>
+</statements>
+Syntax error: expected token '}' but found '&'
+</subroutineBody>
+</subroutineDec>
+Syntax error: expected token '}' but found '&'
 </class>
