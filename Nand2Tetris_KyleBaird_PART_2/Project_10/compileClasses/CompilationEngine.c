@@ -766,10 +766,16 @@ void compileExpression(FILE *in, FILE *out){
 		  strcmp(token,"/")==0 || strcmp(token,"&")==0 || strcmp(token,"|")==0 ||
 		  strcmp(token,"<")==0 || strcmp(token,">")==0 || strcmp(token,"=")==0) {
 		
-		//if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
-    			//fprintf(out,"token read before symbol: %s\n",token );
-		//	}
-		fprintf(out, "<symbol> %s </symbol>\n", token);  
+		if(strcmp(token,"<")==0){
+			fprintf(out, "<symbol> &lt; </symbol>\n");
+		}
+		else if(strcmp(token,">")==0){
+			fprintf(out, "<symbol> &gt; </symbol>\n");
+		}else if(strcmp(token,"&")==0){
+			fprintf(out, "<symbol> &amp; </symbol>\n");
+		}else{
+			fprintf(out, "<symbol> %s </symbol>\n", token);  
+		}
 		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			//fprintf(out,"token read after symbol: %s\n",token );
 			}
@@ -1000,7 +1006,7 @@ void compileParamaterList(FILE *in, FILE *out){
 			}
 		}else if(strcmp(token,")")==0){
 			fprintf(out, "</parameterList>\n");
-			break;
+			return;
 		}
 	}
 
