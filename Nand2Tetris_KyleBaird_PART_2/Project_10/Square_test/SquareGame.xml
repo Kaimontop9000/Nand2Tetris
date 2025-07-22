@@ -371,7 +371,8 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
-</whileStatement><ifStatement>
+</whileStatement>
+<ifStatement>
 <keyword> if </keyword>
 <symbol> ( </symbol>
 <expression>
@@ -626,9 +627,11 @@
 </doStatement>
 </statements>
 <symbol> } </symbol>
-</whileStatement></statements>
+</whileStatement>
+</statements>
 <symbol> } </symbol>
-</whileStatement><returnStatement>
+</whileStatement>
+<returnStatement>
 <keyword> return </keyword>
 <symbol> ; </symbol>
 </returnStatement>

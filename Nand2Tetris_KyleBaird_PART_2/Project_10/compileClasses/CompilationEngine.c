@@ -870,7 +870,7 @@ void compileWhile(FILE * in,FILE *out){
 	process("{",in,out);
 	compileStatements(in,out);
 	process("}",in,out);
-	fprintf(out, "</whileStatement>");
+	fprintf(out, "</whileStatement>\n");
 	printf("</whileStatement>\n");
 }
 
