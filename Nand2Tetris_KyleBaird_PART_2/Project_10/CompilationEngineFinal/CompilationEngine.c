@@ -912,11 +912,12 @@ void compileReturn(FILE * in, FILE *out){
 	fprintf(out, "<returnStatement>\n");
 	printf("<returnStatement>\n");
 	process("return", in,out);
+	
 	int x = tokenType(token, stringFlag);
 
-	if(x == INT_CONST||x == STRING_CONST||strcmp(token, "true")==0
-	||strcmp(token,"false")==0||strcmp(token,"null")==0
-	||strcmp(token,"this")==0){
+	if(x == INT_CONST||x == STRING_CONST|| x == IDENTIFIER ||
+	strcmp(token, "true")==0||strcmp(token,"false")==0||
+	strcmp(token,"null")==0||strcmp(token,"this")==0){
 		
 		compileExpression(in,out);
 	}else if(strcmp(token,";")==0){
