@@ -1,9 +1,9 @@
-/*Created June 01 2025- Last edited July 21th 2025
-Jack Tokenizer
+/*Created August 8th 2025- Last edited August 8th 2025
+Jack Compiler
 =================================================
-Usage - ./Tokenizer_01 <filename.jack or folderName>
+Usage - ./Compiler <filename.jack or folderName>
 
-Usage for TextComparer - bash TextComparer.sh Folder/file.xml Folder_test/file.xml 
+Testing for XML(Project 10) : Usage for TextComparer - bash TextComparer.sh Folder/file.xml Folder_test/file.xml 
 --------------------------------------------------------------------------------------------------------------------------------------
 Token Creation Functions:						|Description
 --------------------------------------------------------------------------------------------------------------------------------------
@@ -160,6 +160,15 @@ file processing handled in main. No functions yet, should probably make function
 file processing.
 
 ----------------------------------------------------*/
+/*Symbol Tables
+name:(name of identifier)
+type:(int, char, boolean or class type)
+kind:(field,static,arg or var(local))
+#:(index of kind)
+category:(class or subroutine)
+usage:(declared or used)
+proposed XML output
+</identifier> name:%s, type:%s, kind:%s, #:%d, category:%s, usage:%s </identifier>*/
 
 #include <stdio.h>
 #include <string.h>
@@ -200,7 +209,7 @@ file processing.
 
 char token[250];			//used to hold the token 
 int stringFlag;				//used for string constants, because we remove the "" from the string, this flag helps us to differentiate
-							//between identifiers. Flag is set in advance() and is tested in the tokenType(), i could take the flag and make it a local variable for the keyword type function. by copying the strinf with """ and then ky removjng them qhen needed.
+							//between identifiers. Flag is set in advance() and is tested in the tokenType(), i could take the flag and make it a local variable for the keyword type function. by copying the string with """ and then by removing them when needed.
 int len = 250;
 
 //function declarations
@@ -231,7 +240,7 @@ void skipBlockComment(FILE *in) {
 
 
 /*hasMoreTokens() skips over whitespace and returns if a valid character is found. I think it only skips over the first initial whitespace
-but because we assume that the source code is error free I hope that there is never double space characters*/
+but because we assume that the source code is error free I hope that there is never double space characters, note, I think this issue was fixed*/
 
 int hasMoreTokens(FILE *input){
 	int c;
@@ -246,7 +255,7 @@ int hasMoreTokens(FILE *input){
 
 /* token generation/creation : advance() only called if hasMoreTokens() returns true. Takes a FILE pointer to read in the next token, 
 	a char string[] to hold the token, maxLen for buffer overflow and a global flag that is used to for string constants(this helps
-	differentiate between string constants and identifiers because we eliminat the "" from string constants */
+	differentiate between string constants and identifiers because we eliminate the "" from string constants */
 
 int advance(FILE *in, char *string, int *flag){
 	*flag = 0;  //reset flag everytime advance is called, gets ready to find next token
@@ -1065,51 +1074,77 @@ void compileVarDec(FILE *in, FILE *out){
 	fprintf(out, "</varDec>\n");
 	printf("</varDec>\n");
 }
+//should I pass the symbolTable variables as arguments into compileClassVarDec?
+//	char classSymbolTableName[250];
+	//char classSymbolTableType[250];
+	//char classSymbolTableKind[250];
+	//int classSymbolTable#Static;
+	//int classSymbolTable#Field;
+
+	//char subroutineSymbolTableName[250];
+	//char subroutineSymbolTableType[250];
+	//char subroutineSymbolTableKind[250];
+	//int subroutineSymbolTable#Static;
+	//int subroutineSymbolTable#Field;
+
+	//possibly have two flags to show if inside a class or inside a subroutine
+	//int flagSymbolTableClass;
+	//int flagSymbolTableSubroutine;
+
+	//flag to show usage is declared or used
+	//int symbolTableUsedorDeclared;
+
+//classVarDec:('static'|'field') type varName (';'varName)*
+//type: 'int'|'char'|'boolean'| className
+//className:identifier
+//varName:identifier
+
+
 void compileClassVarDec(FILE *in, FILE *out, char *token){
-	fprintf(out, "<classVarDec>\n");
-	printf("<classVarDec>\n");
-
+	fprintf(out, "<classVarDec>\n"); //will remove for compiler to generate only VM code
+	printf("<classVarDec>\n");		 //will remove for compiler to generate only VM code
+	
+	//('static'|'field')
 	int x = tokenType(token, stringFlag);
-
 	if(strcmp(token, "static")==0){
 		process("static", in, out);
+		//int classSymbolTable#Static;
 	}else if(strcmp(token, "field")==0){
 		process("field", in, out);
+		//int classSymbolTable#Field;
 	}
-
-		//type is either keyword(int, char or boolean) or identifier(className)
-		x = tokenType(token, stringFlag);
 	
-		if (x == KEYWORD) {
-			fprintf(out, "<keyword> %s </keyword>\n", token);
-		}
-		else if(x ==  IDENTIFIER){
+	//type:'int'|'char'|'boolean'
+	x = tokenType(token, stringFlag);
+	//break up keyword more specifically to  find the specific type
+	if (x == KEYWORD) {
+		fprintf(out, "<keyword> %s </keyword>\n", token);
+	}//type:className(className:identifier)
+	else if(x ==  IDENTIFIER){
+		fprintf(out, "<identifier> %s </identifier>\n", token);
+	}
+	if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
+		printf("token read: %s\n",token );//will remove for compiler to generate only VM code
+	}
+	
+	//varName (';'varName)*
+	while(1){
+		x = tokenType(token, stringFlag);
+		if(x == IDENTIFIER){
 			fprintf(out, "<identifier> %s </identifier>\n", token);
 		}
-	
 		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
-		    printf("token read: %s\n",token );
+			printf("token read: %s\n",token );
 		}
-		
-		while(1){
-			x = tokenType(token, stringFlag);
-			if(x == IDENTIFIER){
-				fprintf(out, "<identifier> %s </identifier>\n", token);
-			}
-
-			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
-			    printf("token read: %s\n",token );
-			}
-
-			if(token[0] == ';'){
-				process(";",in, out);
-				break;
-			}
-			else if(token[0] == ','){
-				process(",",in, out);
-				continue;
-			}
-		}	
+		if(token[0] == ';'){
+			process(";",in, out);
+			break;
+		}
+		else if(token[0] == ','){
+			process(",",in, out);
+			continue;
+		}
+	}	
 	fprintf(out, "</classVarDec>\n");
 	printf("</classVarDec>\n");
 }
@@ -1181,17 +1216,45 @@ void compileSubroutineDec(FILE *in, FILE *out){
 	fprintf(out, "</subroutineDec>\n");
 	printf("</subroutineDec>\n");
 }
+//<identifier> name:%s, type:%s, kind:%s, #:%d, category:%s, usage:%s </identifier>
+//<identifier> name:%s, type:%s(class), kind(none):%s, #:%d(none), category:%s, usage:%s </identifier>
 
+/*according to Compiling Classes(project 11, when starting to compile a class, compiler creates a class-level
+symbol table and adds to it the field and static variables declared in the class declaration. Compiler also
+creates an empty subroutine-level symbol table. No code is generated*/
 void compileClass(FILE *in, FILE *out){
 	fprintf(out, "<class>\n");
-	printf("<class>\n");
-	//printf("Calling class()\n");
+	//printf("<class>\n");
+
+	
+
 	while(hasMoreTokens(in)) {
     	advance(in, token, &stringFlag); // prime the first token
     	if (strlen(token) > 0) break;  	
 	}
 	
 	process("class", in, out);
+	//should I add the the two symbol tables as local variables to compileClass function?
+	//char classSymbolTableName[250];
+	//char classSymbolTableType[250];
+	//char classSymbolTableKind[250];
+	//int classSymbolTable#Static;
+	//int classSymbolTable#Field;
+
+	//char subroutineSymbolTableName[250];
+	//char subroutineSymbolTableType[250];
+	//char subroutineSymbolTableKind[250];
+	//int subroutineSymbolTable#Static;
+	//int subroutineSymbolTable#Field;
+
+	//possibly have two flags to show if inside a class or inside a subroutine
+	//int flagSymbolTableClass;
+	//int flagSymbolTableSubroutine;
+
+	//flag to show usage is declared or used
+	//int symbolTableUsedorDeclared;
+
+
 	int x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
 		fprintf(out, "<identifier> %s </identifier>\n", token);
