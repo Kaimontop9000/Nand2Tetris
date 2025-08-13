@@ -1,4 +1,4 @@
-/*Created August 8th 2025- Last edited August 11th 2025
+/*Created August 8th 2025- Last edited August 12th 2025
 Jack Compiler
 =================================================
 Usage - ./Compiler <filename.jack or folderName>
@@ -12,10 +12,11 @@ bash TextComparer.sh Folder/file.xml Folder_test/file.xml
 #include <ctype.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include "GLOBALS.h"
 #include "Token_Creation_Functions.h"
 #include "Class_Compilation_Functions.h"
 #include "File_Processing_Functions.h"
-#include "GLOBALS.h"
+#include "SYMBOL_TABLE.h"
 
 //===========================================
 int main(int argc, char const *argv[])

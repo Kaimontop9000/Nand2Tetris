@@ -1,3 +1,5 @@
+#ifndef TOKEN_CREATION_H  
+#define TOKEN_CREATION_H
 /*Created August 11th - Last edited August 11th*/
 
 /*Token Creation Functions
@@ -110,3 +112,5 @@ char *intVal(char *string);
 can use this function to take the token and returns the integer
 value as its string*/
 char *stringVal(char *string);
+
+#endif // End of include guard

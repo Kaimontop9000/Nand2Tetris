@@ -1,3 +1,5 @@
+#ifndef FILE_PROCESSING_H 
+#define FILE_PROCESSING_H  
 /*Created August 11th - Last edited August 11th*/
 /*FILE PROCESSING FUNCTIONS
 
@@ -17,3 +19,5 @@ category:(class or subroutine)
 usage:(declared or used)
 proposed XML output
 </identifier> name:%s, type:%s, kind:%s, #:%d, category:%s, usage:%s </identifier>*/
+
+#endif // End of include guard

@@ -1,3 +1,6 @@
+#ifndef CLASS_COMPILATION_H   
+#define CLASS_COMPILATION_H   
+
 /*Created August 11th - Last edited August 11th*/
 /*PROGRAM STRUCTURE FUNCTIONS(SENTENCE BUILDING)
 
@@ -169,7 +172,6 @@ void compileVarDec(FILE *in, FILE *out);
 //className:identifier
 //varName:identifier
 
-
 void compileClassVarDec(FILE *in, FILE *out, char *token);
 
 //subroutineBody: '{' varDec* statements '}'
@@ -183,3 +185,5 @@ void compileSubroutineDec(FILE *in, FILE *out);
 symbol table and adds to it the field and static variables declared in the class declaration. Compiler also
 creates an empty subroutine-level symbol table. No code is generated*/
 void compileClass(FILE *in, FILE *out);
+
+#endif

@@ -8,6 +8,8 @@
 #include "Token_Creation_Functions.h"
 #include "Class_Compilation_Functions.h"
 
+char token[LEN];
+int stringFlag;
 
 void printXmlToken(int tokenDefinedbyX, FILE *outXML){	
 	if(tokenDefinedbyX == SYMBOL){
