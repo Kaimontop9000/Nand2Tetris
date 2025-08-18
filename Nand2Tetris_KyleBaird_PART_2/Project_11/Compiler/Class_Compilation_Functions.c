@@ -7,6 +7,7 @@
 #include "GLOBALS.h"
 #include "Token_Creation_Functions.h"
 #include "Class_Compilation_Functions.h"
+#include "Symbol_Table.h"
 
 char token[LEN];
 int stringFlag;
@@ -589,15 +590,21 @@ void compileClassVarDec(FILE *in, FILE *out, char *token){
 	
 	//('static'|'field')
 	int x = tokenType(token, stringFlag);
+	Kind kind;
 	if(strcmp(token, "static")==0){
+		kind = STATIC;
 		process("static", in, out);
 		//int classSymbolTable#Static;
 	}else if(strcmp(token, "field")==0){
+		kind = FIELD;
 		process("field", in, out);
 		//int classSymbolTable#Field;
 	}
 	
 	//type:'int'|'char'|'boolean'
+	char type[MAX_NAME_LEN];
+	strcpy(type,token);
+
 	x = tokenType(token, stringFlag);
 	//break up keyword more specifically to  find the specific type
 	if (x == KEYWORD) {
@@ -614,7 +621,22 @@ void compileClassVarDec(FILE *in, FILE *out, char *token){
 	while(1){
 		x = tokenType(token, stringFlag);
 		if(x == IDENTIFIER){
-			fprintf(out, "<identifier> %s </identifier>\n", token);
+			// Define in symbol table
+            define(classTable, token, type, kind);
+
+			// Lookup the kind from the table (instead of relying on local 'kind')
+			Kind k = kindOf(classTable, token);
+			int idx = indexOf(classTable, token);
+
+			fprintf(out,
+    		"<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"declared\"/>\n",
+  			token,
+    		(k == STATIC ? "static" :
+    		k == FIELD  ? "field"  :
+		    k == ARG    ? "arg"    :
+		    k == VAR    ? "var"    : "none"),
+		    idx
+			);
 		}
 		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
 			printf("token read: %s\n",token );
