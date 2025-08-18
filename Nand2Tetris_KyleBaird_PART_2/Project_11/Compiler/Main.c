@@ -16,7 +16,7 @@ bash TextComparer.sh Folder/file.xml Folder_test/file.xml
 #include "Token_Creation_Functions.h"
 #include "Class_Compilation_Functions.h"
 #include "File_Processing_Functions.h"
-#include "SYMBOL_TABLE.h"
+#include "Symbol_Table.h"
 
 //===========================================
 int main(int argc, char const *argv[])

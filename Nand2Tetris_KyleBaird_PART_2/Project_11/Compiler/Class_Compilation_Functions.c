@@ -584,7 +584,7 @@ void compileVarDec(FILE *in, FILE *out){
 //varName:identifier
 
 
-void compileClassVarDec(FILE *in, FILE *out, char *token){
+void compileClassVarDec(FILE *in, FILE *out, char *token, SymbolTable *classTable){
 	fprintf(out, "<classVarDec>\n"); //will remove for compiler to generate only VM code
 	printf("<classVarDec>\n");		 //will remove for compiler to generate only VM code
 	
@@ -592,11 +592,11 @@ void compileClassVarDec(FILE *in, FILE *out, char *token){
 	int x = tokenType(token, stringFlag);
 	Kind kind;
 	if(strcmp(token, "static")==0){
-		kind = STATIC;
+		kind = KIND_STATIC;
 		process("static", in, out);
 		//int classSymbolTable#Static;
 	}else if(strcmp(token, "field")==0){
-		kind = FIELD;
+		kind = KIND_FIELD;
 		process("field", in, out);
 		//int classSymbolTable#Field;
 	}
@@ -629,12 +629,12 @@ void compileClassVarDec(FILE *in, FILE *out, char *token){
 			int idx = indexOf(classTable, token);
 
 			fprintf(out,
-    		"<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"declared\"/>\n",
+    		"<identifier name=\"%s\" kind=\"%s\" index=\"%d\" usage=\"declared\"/>\n",
   			token,
-    		(k == STATIC ? "static" :
-    		k == FIELD  ? "field"  :
-		    k == ARG    ? "arg"    :
-		    k == VAR    ? "var"    : "none"),
+    		(k == KIND_STATIC ? "static" :
+    		k == KIND_FIELD  ? "field"  :
+		    k == KIND_ARG    ? "arg"    :
+		    k == KIND_VAR    ? "var"    : "none"),
 		    idx
 			);
 		}
@@ -731,7 +731,8 @@ void compileClass(FILE *in, FILE *out){
 	fprintf(out, "<class>\n");
 	//printf("<class>\n");
 
-	
+	SymbolTable classTable;            // local class-level symbol table
+    construct_Symbol_Table(&classTable);  // initialize/reset table
 
 	while(hasMoreTokens(in)) {
     	advance(in, token, &stringFlag); // prime the first token
@@ -772,7 +773,7 @@ void compileClass(FILE *in, FILE *out){
 
 	while(1){
 		if(strcmp(token, "static")==0 || strcmp(token, "field")==0){
-			compileClassVarDec(in,out,token);
+			compileClassVarDec(in,out,token,&classTable);
 		}else{
 			break;
 		}		

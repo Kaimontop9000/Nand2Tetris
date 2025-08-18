@@ -1,7 +1,7 @@
 #include <string.h>  // for memset, strncpy
 #include <stdio.h>
 #include <stdlib.h>
-#include "SYMBOL_TABLE.h"
+#include "Symbol_Table.h"
 
 void construct_Symbol_Table(SymbolTable *table) {
     table->count = 0; //total number of symbols in the table
@@ -14,7 +14,7 @@ void construct_Symbol_Table(SymbolTable *table) {
     for (int i = 0; i < MAX_SYMBOLS; i++) {
         table->symbols[i].name[0] = '\0';
         table->symbols[i].type[0] = '\0';
-        table->symbols[i].kind = NONE;
+        table->symbols[i].kind = KIND_NONE;
         table->symbols[i].index = -1;
     }
 }
@@ -27,7 +27,7 @@ void reset_Symbol_Table(SymbolTable *table) {
     for (int i = 0; i < MAX_SYMBOLS; i++) {
         table->symbols[i].name[0] = '\0';
         table->symbols[i].type[0] = '\0';
-        table->symbols[i].kind = NONE;
+        table->symbols[i].kind = KIND_NONE;
         table->symbols[i].index = -1;
     }
 }
@@ -48,16 +48,16 @@ void define(SymbolTable *table, const char name[], const char type[], Kind kind)
 
     // Assign index based on kind
     switch (kind) {
-        case STATIC:
+        case KIND_STATIC:
             sym->index = table->staticCount++;
             break;
-        case FIELD:
+        case KIND_FIELD:
             sym->index = table->fieldCount++;
             break;
-        case ARG:
+        case KIND_ARG:
             sym->index = table->argCount++;
             break;
-        case VAR:
+        case KIND_VAR:
             sym->index = table->varCount++;
             break;
         default:
@@ -69,10 +69,10 @@ void define(SymbolTable *table, const char name[], const char type[], Kind kind)
 
 int varCount(SymbolTable *table, Kind kind) {
     switch (kind) {
-        case STATIC: return table->staticCount;
-        case FIELD:  return table->fieldCount;
-        case ARG:    return table->argCount;
-        case VAR:    return table->varCount;
+        case KIND_STATIC: return table->staticCount;
+        case KIND_FIELD:  return table->fieldCount;
+        case KIND_ARG:    return table->argCount;
+        case KIND_VAR:    return table->varCount;
         default:     return 0; // for NONE or invalid
     }
 }
@@ -83,7 +83,7 @@ Kind kindOf(SymbolTable *table, const char *name) {
             return table->symbols[i].kind; // found it
         }
     }
-    return NONE; // not found
+    return KIND_NONE; // not found
 }
 
 int indexOf(SymbolTable *table, const char *name) {

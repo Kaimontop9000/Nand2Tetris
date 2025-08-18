@@ -6,11 +6,11 @@
 #define MAX_TYPE_LEN 64
 
 typedef enum {
-    STATIC,
-    FIELD,
-    ARG,
-    VAR,
-    NONE
+    KIND_STATIC,
+    KIND_FIELD,
+    KIND_ARG,
+    KIND_VAR,
+    KIND_NONE
 } Kind;
 
 typedef struct {

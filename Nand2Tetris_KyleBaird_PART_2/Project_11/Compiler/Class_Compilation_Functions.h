@@ -1,6 +1,8 @@
+
 #ifndef CLASS_COMPILATION_H   
 #define CLASS_COMPILATION_H   
 
+#include "Symbol_Table.h"
 /*Created August 11th - Last edited August 11th*/
 /*PROGRAM STRUCTURE FUNCTIONS(SENTENCE BUILDING)
 
@@ -172,7 +174,7 @@ void compileVarDec(FILE *in, FILE *out);
 //className:identifier
 //varName:identifier
 
-void compileClassVarDec(FILE *in, FILE *out, char *token);
+void compileClassVarDec(FILE *in, FILE *out, char *token, SymbolTable *classTable);
 
 //subroutineBody: '{' varDec* statements '}'
 void compileSubroutineBody(FILE *in,FILE *out);
