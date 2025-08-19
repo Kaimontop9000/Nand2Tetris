@@ -5,7 +5,7 @@
 <classVarDec>
 <keyword> static </keyword>
 <keyword> boolean </keyword>
-<identifier name="test" category="static" index="0" usage="declared"/>
+<identifier name="test" kind="static" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </classVarDec>
 <subroutineDec>
@@ -21,13 +21,13 @@
 <varDec>
 <keyword> var </keyword>
 <identifier> SquareGame </identifier>
-<identifier> game </identifier>
+<identifier name="game" category="var" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> game </identifier>
+<identifier name="game" category="var" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -85,21 +85,21 @@
 <varDec>
 <keyword> var </keyword>
 <keyword> int </keyword>
-<identifier> i </identifier>
+<identifier name="i" category="var" index="0" usage="declared"/>
 <symbol> , </symbol>
-<identifier> j </identifier>
+<identifier name="j" category="var" index="1" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <varDec>
 <keyword> var </keyword>
 <identifier> String </identifier>
-<identifier> s </identifier>
+<identifier name="s" category="var" index="2" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <varDec>
 <keyword> var </keyword>
 <identifier> Array </identifier>
-<identifier> a </identifier>
+<identifier name="a" category="var" index="3" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <statements>
@@ -116,7 +116,7 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> s </identifier>
+<identifier name="s" category="var" index="2" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -127,7 +127,7 @@
 </letStatement>
 <letStatement>
 <keyword> let </keyword>
-<identifier> s </identifier>
+<identifier name="s" category="var" index="2" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -138,7 +138,7 @@
 </letStatement>
 <letStatement>
 <keyword> let </keyword>
-<identifier> a </identifier>
+<identifier name="a" category="var" index="3" usage="used"/>
 <symbol> [ </symbol>
 <expression>
 <term>
@@ -149,7 +149,7 @@
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> a </identifier>
+<identifier name="a" category="var" index="3" usage="used"/>
 <symbol> [ </symbol>
 <expression>
 <term>
@@ -168,7 +168,7 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> i </identifier>
+<identifier name="i" category="var" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -192,7 +192,7 @@
 </letStatement>
 <letStatement>
 <keyword> let </keyword>
-<identifier> j </identifier>
+<identifier name="j" category="var" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -216,7 +216,7 @@
 </letStatement>
 <letStatement>
 <keyword> let </keyword>
-<identifier> i </identifier>
+<identifier name="i" category="var" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>

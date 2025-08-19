@@ -122,33 +122,33 @@ void printXmlToken(int tokenDefinedbyX, FILE *outXML);
 
 void process(char *process,  FILE *in,  FILE *out);
 
-void compileExpressionList(FILE *in,FILE *out);
+void compileExpressionList(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
 
 //term: integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
 //	'(' expression ')' |(unaryOp term) |subroutineCall
-void compileTerm(FILE *in, FILE *out);
+void compileTerm(FILE *in, FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
 //expression: term(op term)*
-void compileExpression(FILE *in, FILE *out);
+void compileExpression(FILE *in, FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
 
 /*  letStatement: 'let' varName ('[' expression ']')? '=' expression ';'  */
-void compileLet(FILE *in,FILE *out);
+void compileLet(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileIf(FILE *in,FILE *out);
+void compileIf(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileWhile(FILE * in,FILE *out);
+void compileWhile(FILE * in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileDo(FILE *in,FILE *out);
+void compileDo(FILE *in,FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileReturn(FILE * in, FILE *out);
+void compileReturn(FILE * in, FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileStatements(FILE *in,FILE *out);
+void compileStatements(FILE *in,FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileParamaterList(FILE *in, FILE *out);
+void compileParamaterList(FILE *in, FILE *out,SymbolTable *subroutineTable);
 
-void compileVarDec(FILE *in, FILE *out);
+void compileVarDec(FILE *in, FILE *out, SymbolTable *subroutineTable);
 //should I pass the symbolTable variables as arguments into compileClassVarDec?
 //	char classSymbolTableName[250];
 	//char classSymbolTableType[250];
@@ -177,9 +177,9 @@ void compileVarDec(FILE *in, FILE *out);
 void compileClassVarDec(FILE *in, FILE *out, char *token, SymbolTable *classTable);
 
 //subroutineBody: '{' varDec* statements '}'
-void compileSubroutineBody(FILE *in,FILE *out);
+void compileSubroutineBody(FILE *in,FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileSubroutineDec(FILE *in, FILE *out);
+void compileSubroutineDec(FILE *in, FILE *out,SymbolTable *classTable);
 //<identifier> name:%s, type:%s, kind:%s, #:%d, category:%s, usage:%s </identifier>
 //<identifier> name:%s, type:%s(class), kind(none):%s, #:%d(none), category:%s, usage:%s </identifier>
 

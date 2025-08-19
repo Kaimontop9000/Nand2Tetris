@@ -113,7 +113,7 @@ void process(char *process,  FILE *in,  FILE *out) {
 		fprintf(out,"Syntax error: expected token '%s' but found '%s'\n", process,token);
 	}
 }
-void compileExpressionList(FILE *in,FILE *out){
+void compileExpressionList(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable){
 	printf("<expressionList>\n");
 	fprintf(out, "<expressionList>\n");
 	
@@ -122,14 +122,14 @@ void compileExpressionList(FILE *in,FILE *out){
 		printf("</expressionList>\n");
 		return;
 	}
-	compileExpression(in,out);
+	compileExpression(in,out, subroutineTable, classTable);
 	while(1){
 		if(strcmp(token,",")==0){
 			process(",",in,out);
 			//if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
 		   //printf("token read: %s\n",token );
 		//}
-			compileExpression(in,out);
+			compileExpression(in,out,subroutineTable, classTable);
 		}else{
 		break;
 		}
@@ -141,7 +141,7 @@ void compileExpressionList(FILE *in,FILE *out){
 
 //term: integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
 //	'(' expression ')' |(unaryOp term) |subroutineCall
-void compileTerm(FILE *in, FILE *out){
+void compileTerm(FILE *in, FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable){
 	fprintf(out, "<term>\n");
 	printf("<term>\n");
 	
@@ -180,25 +180,40 @@ void compileTerm(FILE *in, FILE *out){
 		//dealing with an array[] or a subroutineCall. We lookead only when token is a varName
 		//or subroutine name. In other words, when we have an identifier as our term.
 
-
+		// Lookahead for array or subroutine call
 
 		if(strcmp(tokenL1,"[")==0){
-			fprintf(out, "<identifier> %s </identifier>\n",identifier);
-			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
+			// array access
+			fprintf(out, "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
+       		identifier,
+	        (kindOf(subroutineTable, identifier) == KIND_STATIC ? "static" :
+	        kindOf(subroutineTable, identifier) == KIND_FIELD  ? "field"  :
+	        kindOf(subroutineTable, identifier) == KIND_ARG    ? "arg"    :
+	        kindOf(subroutineTable, identifier) == KIND_VAR    ? "var"    :
+	        kindOf(classTable, identifier) == KIND_STATIC ? "static" :
+	        kindOf(classTable, identifier) == KIND_FIELD  ? "field"  :
+	        kindOf(classTable, identifier) == KIND_ARG    ? "arg"    :
+	        kindOf(classTable, identifier) == KIND_VAR    ? "var"    : "none"),
+	        (kindOf(subroutineTable, identifier) != KIND_NONE ? indexOf(subroutineTable, identifier) :
+	        kindOf(classTable, identifier) != KIND_NONE ? indexOf(classTable, identifier) : -1)
+    		);		
+
+    		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			printf("token read: %s\n",token );
 			}
 			process("[", in, out);
-			compileExpression(in,out);
+			compileExpression(in,out, subroutineTable, classTable);
 			process("]", in, out);
 			fprintf(out, "</term>\n");
 			return;
+
 		}else if(strcmp(tokenL1,"(")==0){
 			fprintf(out, "<identifier> %s </identifier>\n",identifier);
 			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			printf("token read: %s\n",token );
 			}
 			process("(", in,out);
-			compileExpressionList(in, out);
+			compileExpressionList(in, out, subroutineTable, classTable);
 			process(")", in, out);
 			fprintf(out, "</term>\n");
 			return;
@@ -215,7 +230,7 @@ void compileTerm(FILE *in, FILE *out){
     			printf("token read: %s\n",token );
 			}
 			process("(", in,out);
-			compileExpressionList(in,out);
+			compileExpressionList(in,out, subroutineTable, classTable);
 			process(")", in,out);
 			fprintf(out, "</term>\n");
 			return;
@@ -230,13 +245,13 @@ void compileTerm(FILE *in, FILE *out){
 		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     		printf("token read: %s\n",token );
 		}
-		compileTerm(in,out);
+		compileTerm(in,out, subroutineTable, classTable);
 		fprintf(out, "</term>\n");
 		return;
 	}
 	else if(strcmp(token,"(")==0){
 		process("(",in,out);
-		compileExpression(in, out);
+		compileExpression(in, out, subroutineTable, classTable);
 		process(")", in, out);
 		fprintf(out, "</term>\n");
 		return;
@@ -251,11 +266,11 @@ void compileTerm(FILE *in, FILE *out){
 }
 
 //expression: term(op term)*
-void compileExpression(FILE *in, FILE *out){
+void compileExpression(FILE *in, FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable){
 	fprintf(out, "<expression>\n");
 	printf("<expression>\n");
 
-	compileTerm(in,out);
+	compileTerm(in,out, subroutineTable, classTable);
 	
 	while(strcmp(token,"+")==0 || strcmp(token,"-")==0 || strcmp(token,"*")==0 ||
 		  strcmp(token,"/")==0 || strcmp(token,"&")==0 || strcmp(token,"|")==0 ||
@@ -275,7 +290,7 @@ void compileExpression(FILE *in, FILE *out){
     			//fprintf(out,"token read after symbol: %s\n",token );
 			}
 
-		compileTerm(in, out);
+		compileTerm(in, out,subroutineTable, classTable);
 	}
 
 	fprintf(out, "</expression>\n");
@@ -285,17 +300,34 @@ void compileExpression(FILE *in, FILE *out){
 
 
 /*  letStatement: 'let' varName ('[' expression ']')? '=' expression ';'  */
-void compileLet(FILE *in,FILE *out){
+void compileLet(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable){
 
 	fprintf(out, "<letStatement>\n");
 	printf("<letStatement>\n");
-	//let
+	//let keyword
 	process("let",in,out);
 
 	//varName
 	int x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
-		fprintf(out,"<identifier> %s </identifier>\n",token);
+		Kind k = kindOf(subroutineTable, token);
+    	int idx = indexOf(subroutineTable, token);
+
+    	// If not in subroutine table, check class table
+    	if(k == KIND_NONE){
+        k = kindOf(classTable, token);
+        idx = indexOf(classTable, token);
+    	}
+
+		fprintf(out,
+        "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
+        token,
+        (k == KIND_STATIC ? "static" :
+         k == KIND_FIELD  ? "field"  :
+         k == KIND_ARG    ? "arg"    :
+         k == KIND_VAR    ? "var"    : "none"),
+        idx
+    	);
 	}else{
 		printf("ERROR\n");
 	}
@@ -307,16 +339,16 @@ void compileLet(FILE *in,FILE *out){
 
 	if(strcmp(token,"[")==0){
 		process("[",in,out);
-		compileExpression(in, out);
+		compileExpression(in, out, subroutineTable, classTable);
 		process("]",in,out);
 	}
 
 			
-	//equal sign
+	//"=" expression
 	if(strcmp(token,"=")==0){
 		process("=", in, out);
 	
-		compileExpression(in,out);
+		compileExpression(in,out,subroutineTable, classTable);
 		//;
 		if(strcmp(token,";")==0){
 		process(";",in,out);
@@ -334,42 +366,42 @@ void compileLet(FILE *in,FILE *out){
 	printf("</letStatement>\n");
 }
 
-void compileIf(FILE *in,FILE *out){
+void compileIf(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable){
 	fprintf(out, "<ifStatement>\n");
 	printf("<ifStatement>\n");
 	process("if",in,out);
 	process("(",in,out);
-	compileExpression(in,out);
+	compileExpression(in,out,subroutineTable, classTable);
 	process(")",in,out);
 	process("{",in,out);
-	compileStatements(in,out);
+	compileStatements(in,out,subroutineTable, classTable);
 	process("}",in,out);
 	if(strcmp(token,"else")==0){
 		process("else",in,out);
 		process("{",in,out);
-		compileStatements(in,out);
+		compileStatements(in,out, subroutineTable, classTable);
 		process("}",in,out);
 	}
 	fprintf(out, "</ifStatement>\n");
 	printf("</ifstatement>\n");
 }
 
-void compileWhile(FILE * in,FILE *out){
+void compileWhile(FILE * in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable){
 	fprintf(out, "<whileStatement>\n");
 	printf("<whileStatement>\n");
 
 	process("while",in,out);
 	process("(",in,out);
-	compileExpression(in,out);
+	compileExpression(in,out, subroutineTable, classTable);
 	process(")",in,out);
 	process("{",in,out);
-	compileStatements(in,out);
+	compileStatements(in,out, subroutineTable, classTable);
 	process("}",in,out);
 	fprintf(out, "</whileStatement>\n");
 	printf("</whileStatement>\n");
 }
 
-void compileDo(FILE *in,FILE *out){
+void compileDo(FILE *in,FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable){
 	fprintf(out, "<doStatement>\n");
 	printf("<doStatement>\n");
 	process("do",in,out);
@@ -381,7 +413,7 @@ void compileDo(FILE *in,FILE *out){
 
 	if(strcmp(token,"(")==0){
 		process("(", in,out);
-		compileExpressionList(in, out);
+		compileExpressionList(in, out,subroutineTable, classTable);
 		process(")", in, out);
 
 	}else if(strcmp(token,".")==0){
@@ -392,7 +424,7 @@ void compileDo(FILE *in,FILE *out){
    			printf("token read: %s\n",token );
 		}
 		process("(", in,out);
-		compileExpressionList(in,out);
+		compileExpressionList(in,out,subroutineTable, classTable);
 		process(")", in,out);
 		//if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			//fprintf(out,"token read after symbol: %s\n",token );
@@ -403,7 +435,7 @@ void compileDo(FILE *in,FILE *out){
 	printf("</doStatement>\n");
 }
 
-void compileReturn(FILE * in, FILE *out){
+void compileReturn(FILE * in, FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable){
 	fprintf(out, "<returnStatement>\n");
 	printf("<returnStatement>\n");
 	process("return", in,out);
@@ -414,7 +446,7 @@ void compileReturn(FILE * in, FILE *out){
 	strcmp(token, "true")==0||strcmp(token,"false")==0||
 	strcmp(token,"null")==0||strcmp(token,"this")==0){
 		
-		compileExpression(in,out);
+		compileExpression(in,out, subroutineTable, classTable);
 	}else if(strcmp(token,";")==0){
 		process(";",in,out);
 	}
@@ -426,7 +458,7 @@ void compileReturn(FILE * in, FILE *out){
 	printf("</returnStatement>\n");
 }
 
-void compileStatements(FILE *in,FILE *out){
+void compileStatements(FILE *in,FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable){
 	printf("<statements>\n");
 	fprintf(out, "<statements>\n");
 
@@ -436,67 +468,91 @@ void compileStatements(FILE *in,FILE *out){
 		
 		while(1){
 			if(strcmp(token, "let")==0){
-				compileLet(in,out);
+				compileLet(in,out,subroutineTable,classTable);
 			}else if(strcmp(token, "if")==0){
-				compileIf(in, out);
+				compileIf(in, out,subroutineTable,classTable);
 			}else if(strcmp(token, "while")==0){
-				compileWhile(in, out);
+				compileWhile(in, out,subroutineTable,classTable);
 			}else if(strcmp(token, "do")==0){
-				compileDo(in, out);
+				compileDo(in, out,subroutineTable,classTable);
 			}else if(strcmp(token, "return")==0){
-				compileReturn(in, out);
+				compileReturn(in, out,subroutineTable,classTable);
 			}else{
 				break;
 			}
 		}
 	//}
 	fprintf(out, "</statements>\n");
-	printf("</statements\n");
+	printf("</statements>\n");
 }
 
-void compileParamaterList(FILE *in, FILE *out){
+void compileParamaterList(FILE *in, FILE *out,SymbolTable *subroutineTable){
 	fprintf(out, "<parameterList>\n");
 	printf("<parameterList>\n");
 	int x = tokenType(token, stringFlag);
+	char type[MAX_NAME_LEN];  // store type for symbol table
+
 	//type
 	if(strcmp(token, "int")==0 || strcmp(token, "char")==0
 	|| strcmp(token, "boolean")==0){
+		strcpy(type, token);  // save type for symbol table
 		fprintf(out, "<keyword> %s </keyword>\n", token);
 	}else if(x == IDENTIFIER){
+		strcpy(type, token);
 		fprintf(out, "<identifier> %s </identifier>\n", token);
 	}else if(strcmp(token,")")==0){
+		// empty paramater list
 		fprintf(out, "</parameterList>\n");
 		return;
 	}	
+	//advance to varName
 	if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
 	    printf("token read: %s\n",token );
 	}
-	//varName
+	//first variable name
 	x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
-		fprintf(out, "<identifier> %s </identifier>\n", token);
+		define(subroutineTable, token, type, KIND_ARG);
+		 // Enhanced XML output
+        fprintf(out,
+        "<identifier name=\"%s\" category=\"arg\" index=\"%d\" usage=\"declared\"/>\n",
+        token,
+        indexOf(subroutineTable, token)
+        );
 	}
+	// advance to next token (',' or ')')
 	if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     	printf("token read: %s\n",token );
 	}
+	// --- Handle subsequent parameters ---
 	while(1){
 		if(strcmp(token,",")==0){
 			process(",",in,out);
+
 			x = tokenType(token, stringFlag);
 			if(strcmp(token, "int")==0 || strcmp(token, "char")==0
 			|| strcmp(token, "boolean")==0){
+				strcpy(type, token);  // save type
 				fprintf(out, "<keyword> %s </keyword>\n", token);
 			}else if(x == IDENTIFIER){
+				strcpy(type, token);
 				fprintf(out, "<identifier> %s </identifier>\n", token);
 			}
+			//advance to varName
 			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			printf("token read: %s\n",token );
 			}
-			//varName
 			x = tokenType(token, stringFlag);
 			if(x == IDENTIFIER){
-				fprintf(out, "<identifier> %s </identifier>\n", token);
+                define(subroutineTable, token, type, KIND_ARG);
+
+				fprintf(out,
+                "<identifier name=\"%s\" category=\"arg\" index=\"%d\" usage=\"declared\"/>\n",
+                token,
+                indexOf(subroutineTable, token)
+                );
 			}
+			// advance to next token
 			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			printf("token read: %s\n",token );
 			}
@@ -509,7 +565,7 @@ void compileParamaterList(FILE *in, FILE *out){
 	fprintf(out, "</parameterList>\n");
 	printf("</parameterList>\n");
 }
-void compileVarDec(FILE *in, FILE *out){
+void compileVarDec(FILE *in, FILE *out, SymbolTable *subroutineTable){
 
 	fprintf(out, "<varDec>\n");
 	printf("<varDec>\n");
@@ -517,8 +573,12 @@ void compileVarDec(FILE *in, FILE *out){
 	process("var", in, out);
 	
 	//type
-
 	int x = tokenType(token, stringFlag);
+
+	// type: 'int' | 'char' | 'boolean' | className
+    char type[MAX_NAME_LEN];
+    strcpy(type, token); // store type for symbol table
+
 	if(x == IDENTIFIER){
 		fprintf(out, "<identifier> %s </identifier>\n", token);
 		
@@ -533,7 +593,12 @@ void compileVarDec(FILE *in, FILE *out){
 	}
 	x = tokenType(token, stringFlag);
 	if(x == IDENTIFIER){
-		fprintf(out, "<identifier> %s </identifier>\n", token);
+		define(subroutineTable, token, type, KIND_VAR);
+		int idx = indexOf(subroutineTable, token);
+        fprintf(out,
+        "<identifier name=\"%s\" category=\"var\" index=\"%d\" usage=\"declared\"/>\n",
+        token, idx
+        );
 		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     		printf("token read: %s\n",token );
 		}
@@ -545,7 +610,15 @@ void compileVarDec(FILE *in, FILE *out){
 
 			x = tokenType(token, stringFlag);
 			if(x == IDENTIFIER){
-				fprintf(out, "<identifier> %s </identifier>\n", token);
+				// Add variable to subroutine symbol table
+            	define(subroutineTable, token, type, KIND_VAR);
+				int idx = indexOf(subroutineTable, token);
+				// Enhanced XML output
+            	fprintf(out,
+                "<identifier name=\"%s\" category=\"var\" index=\"%d\" usage=\"declared\"/>\n",
+                token,
+                idx
+            	);
 			}
 			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
 			    printf("token read: %s\n",token );
@@ -655,24 +728,24 @@ void compileClassVarDec(FILE *in, FILE *out, char *token, SymbolTable *classTabl
 }
 
 //subroutineBody: '{' varDec* statements '}'
-void compileSubroutineBody(FILE *in,FILE *out){
+void compileSubroutineBody(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable){
 	fprintf(out, "<subroutineBody>\n");
 	printf("<subroutineBody>\n");
 	process("{", in, out);
 
 	while(1){
 		if(strcmp(token, "var")==0){
-			compileVarDec(in, out);
+			compileVarDec(in, out,subroutineTable);
 		}else if(strcmp(token, "let")==0){
-			compileStatements(in,out);
+			compileStatements(in,out,subroutineTable, classTable);
 		}else if(strcmp(token, "if")==0){
-			compileStatements(in, out);
+			compileStatements(in, out,subroutineTable, classTable);
 		}else if(strcmp(token, "while")==0){
-			compileStatements(in, out);
+			compileStatements(in, out,subroutineTable, classTable);
 		}else if(strcmp(token, "do")==0){
-			compileStatements(in, out);
+			compileStatements(in, out,subroutineTable, classTable);
 		}else if(strcmp(token, "return")==0){
-			compileStatements(in, out);
+			compileStatements(in, out,subroutineTable, classTable);
 		}else{
 			break;
 		}
@@ -683,7 +756,10 @@ void compileSubroutineBody(FILE *in,FILE *out){
 }
 
 
-void compileSubroutineDec(FILE *in, FILE *out){
+void compileSubroutineDec(FILE *in, FILE *out, SymbolTable *classTable){
+	SymbolTable subroutineTable;
+    construct_Symbol_Table(&subroutineTable);  // reset for this subroutine
+
 	fprintf(out, "<subroutineDec>\n");
 	printf("<subroutineDec>\n");
 	//printf("Calling subroutineDec\n");
@@ -713,10 +789,10 @@ void compileSubroutineDec(FILE *in, FILE *out){
 	}
 	
 	process( "(" , in, out);
-	compileParamaterList(in, out);
+	compileParamaterList(in, out,&subroutineTable);
 	process( ")" , in, out);
 	
-	compileSubroutineBody(in, out);
+	compileSubroutineBody(in, out,&subroutineTable, classTable);
 		
 	fprintf(out, "</subroutineDec>\n");
 	printf("</subroutineDec>\n");
@@ -783,7 +859,7 @@ void compileClass(FILE *in, FILE *out){
 		if(strcmp(token, "constructor") == 0 || 
     	strcmp(token,"function") == 0 || 
     	strcmp(token,"method") == 0) {
-    		compileSubroutineDec(in, out);
+    		compileSubroutineDec(in, out,&classTable);
 		}else{
 			break;
 		}
