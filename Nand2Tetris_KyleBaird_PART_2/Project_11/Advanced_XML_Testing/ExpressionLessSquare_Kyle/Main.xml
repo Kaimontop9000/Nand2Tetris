@@ -5,7 +5,7 @@
 <classVarDec>
 <keyword> static </keyword>
 <keyword> boolean </keyword>
-<identifier> test </identifier>
+<identifier name="test" kind="static" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </classVarDec>
 <subroutineDec>
@@ -21,17 +21,17 @@
 <varDec>
 <keyword> var </keyword>
 <identifier> SquareGame </identifier>
-<identifier> game </identifier>
+<identifier name="game" category="var" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> game </identifier>
+<identifier name="game" category="var" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> game </identifier>
+<identifier name="game" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -79,7 +79,7 @@
 <varDec>
 <keyword> var </keyword>
 <keyword> boolean </keyword>
-<identifier> b </identifier>
+<identifier name="b" category="var" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <statements>
@@ -88,7 +88,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> b </identifier>
+<identifier name="b" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>

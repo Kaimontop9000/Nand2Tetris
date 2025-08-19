@@ -5,13 +5,13 @@
 <classVarDec>
 <keyword> field </keyword>
 <identifier> Square </identifier>
-<identifier> square </identifier>
+<identifier name="square" kind="field" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </classVarDec>
 <classVarDec>
 <keyword> field </keyword>
 <keyword> int </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" kind="field" index="1" usage="declared"/>
 <symbol> ; </symbol>
 </classVarDec>
 <subroutineDec>
@@ -27,11 +27,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> square </identifier>
+<identifier name="square" category="field" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> Square </identifier>
+<identifier name="Square" category="none" index="-1" usage="used"/>
 <symbol> . </symbol>
 <identifier> new </identifier>
 <symbol> ( </symbol>
@@ -61,7 +61,7 @@
 </letStatement>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -145,7 +145,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -174,7 +174,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -203,7 +203,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -232,7 +232,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -293,19 +293,19 @@
 <varDec>
 <keyword> var </keyword>
 <keyword> char </keyword>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <varDec>
 <keyword> var </keyword>
 <keyword> boolean </keyword>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -321,7 +321,7 @@
 <term>
 <symbol> ~ </symbol>
 <term>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="used"/>
 </term>
 </term>
 </expression>
@@ -333,7 +333,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -345,11 +345,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> Keyboard </identifier>
+<identifier name="Keyboard" category="none" index="-1" usage="used"/>
 <symbol> . </symbol>
 <identifier> keyPressed </identifier>
 <symbol> ( </symbol>
@@ -377,7 +377,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -389,7 +389,7 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -406,7 +406,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -435,7 +435,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -464,7 +464,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -476,7 +476,7 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -493,7 +493,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -505,7 +505,7 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -522,7 +522,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -534,7 +534,7 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -551,7 +551,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -563,7 +563,7 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
@@ -585,7 +585,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 <symbol> = </symbol>
 <term>
@@ -601,11 +601,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> Keyboard </identifier>
+<identifier name="Keyboard" category="none" index="-1" usage="used"/>
 <symbol> . </symbol>
 <identifier> keyPressed </identifier>
 <symbol> ( </symbol>

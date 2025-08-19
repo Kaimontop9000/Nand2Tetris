@@ -220,11 +220,25 @@ void compileTerm(FILE *in, FILE *out, SymbolTable *subroutineTable, SymbolTable 
 
 		}else if(strcmp(tokenL1,".")==0){
 			
-			fprintf(out, "<identifier> %s </identifier>\n",identifier);
+			fprintf(out, "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
+            identifier,
+            (kindOf(subroutineTable, identifier) == KIND_STATIC ? "static" :
+            kindOf(subroutineTable, identifier) == KIND_FIELD  ? "field"  :
+            kindOf(subroutineTable, identifier) == KIND_ARG    ? "arg"    :
+            kindOf(subroutineTable, identifier) == KIND_VAR    ? "var"    :
+            kindOf(classTable, identifier) == KIND_STATIC ? "static" :
+            kindOf(classTable, identifier) == KIND_FIELD  ? "field"  :
+            kindOf(classTable, identifier) == KIND_ARG    ? "arg"    :
+            kindOf(classTable, identifier) == KIND_VAR    ? "var"    : "none"),
+            (kindOf(subroutineTable, identifier) != KIND_NONE ? indexOf(subroutineTable, identifier) :
+            kindOf(classTable, identifier) != KIND_NONE ? indexOf(classTable, identifier) : -1)
+            );
 			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			printf("token read: %s\n",token );
 			}
 			process(".", in, out);
+
+            // subroutine name
 			fprintf(out, "<identifier> %s </identifier>\n",token);
 			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			printf("token read: %s\n",token );
@@ -235,11 +249,23 @@ void compileTerm(FILE *in, FILE *out, SymbolTable *subroutineTable, SymbolTable 
 			fprintf(out, "</term>\n");
 			return;
 		}else {
-			fprintf(out, "<identifier> %s </identifier>\n", identifier);
+			fprintf(out, "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
+            identifier,
+            (kindOf(subroutineTable, identifier) == KIND_STATIC ? "static" :
+            kindOf(subroutineTable, identifier) == KIND_FIELD  ? "field"  :
+            kindOf(subroutineTable, identifier) == KIND_ARG    ? "arg"    :
+            kindOf(subroutineTable, identifier) == KIND_VAR    ? "var"    :
+            kindOf(classTable, identifier) == KIND_STATIC ? "static" :
+            kindOf(classTable, identifier) == KIND_FIELD  ? "field"  :
+            kindOf(classTable, identifier) == KIND_ARG    ? "arg"    :
+            kindOf(classTable, identifier) == KIND_VAR    ? "var"    : "none"),
+            (kindOf(subroutineTable, identifier) != KIND_NONE ? indexOf(subroutineTable, identifier) :
+            kindOf(classTable, identifier) != KIND_NONE ? indexOf(classTable, identifier) : -1)
+            );
+  
 			strcpy(token, tokenL1);  // restore token for parent context
 			stringFlag = flagL1;
 		}
-
 	}else if(strcmp(token,"~")==0 || strcmp(token,"-")==0){
 		fprintf(out, "<symbol> %s </symbol>\n",token);
 		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {

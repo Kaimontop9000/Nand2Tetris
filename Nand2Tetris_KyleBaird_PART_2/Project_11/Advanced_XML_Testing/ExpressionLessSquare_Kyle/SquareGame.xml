@@ -5,13 +5,13 @@
 <classVarDec>
 <keyword> field </keyword>
 <identifier> Square </identifier>
-<identifier> square </identifier>
+<identifier name="square" kind="field" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </classVarDec>
 <classVarDec>
 <keyword> field </keyword>
 <keyword> int </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" kind="field" index="1" usage="declared"/>
 <symbol> ; </symbol>
 </classVarDec>
 <subroutineDec>
@@ -27,22 +27,22 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> square </identifier>
+<identifier name="square" category="field" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> square </identifier>
+<identifier name="square" category="field" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
 </letStatement>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -51,7 +51,7 @@
 <keyword> return </keyword>
 <expression>
 <term>
-<identifier> square </identifier>
+<identifier name="square" category="field" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -91,7 +91,7 @@
 <expressionList>
 <expression>
 <term>
-<identifier> square </identifier>
+<identifier name="square" category="field" index="0" usage="used"/>
 </term>
 </expression>
 </expressionList>
@@ -122,7 +122,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -147,7 +147,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -172,7 +172,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -197,7 +197,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -226,7 +226,7 @@
 <expressionList>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 </expression>
 </expressionList>
@@ -254,23 +254,23 @@
 <varDec>
 <keyword> var </keyword>
 <keyword> char </keyword>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <varDec>
 <keyword> var </keyword>
 <keyword> boolean </keyword>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="declared"/>
 <symbol> ; </symbol>
 </varDec>
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -280,7 +280,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -291,7 +291,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -299,11 +299,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -325,7 +325,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -333,11 +333,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -350,7 +350,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -375,7 +375,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -400,7 +400,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -408,11 +408,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> exit </identifier>
+<identifier name="exit" category="var" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -425,7 +425,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -433,11 +433,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -450,7 +450,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -458,11 +458,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> square </identifier>
+<identifier name="square" category="field" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -475,7 +475,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -483,11 +483,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> direction </identifier>
+<identifier name="direction" category="field" index="1" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -500,7 +500,7 @@
 <symbol> ( </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ) </symbol>
@@ -508,11 +508,11 @@
 <statements>
 <letStatement>
 <keyword> let </keyword>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 <symbol> = </symbol>
 <expression>
 <term>
-<identifier> key </identifier>
+<identifier name="key" category="var" index="0" usage="used"/>
 </term>
 </expression>
 <symbol> ; </symbol>
