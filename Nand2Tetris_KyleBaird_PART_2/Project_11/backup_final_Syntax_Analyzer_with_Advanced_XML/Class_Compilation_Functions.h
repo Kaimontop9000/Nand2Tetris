@@ -120,35 +120,35 @@ All these have no compilexxx routines.
 
 void printXmlToken(int tokenDefinedbyX, FILE *outXML);
 
-void process(char *process,  FILE *in,  FILE *outXML);
+void process(char *process,  FILE *in,  FILE *out);
 
-void compileExpressionList(FILE *in, FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileExpressionList(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
 
 //term: integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
 //	'(' expression ')' |(unaryOp term) |subroutineCall
-void compileTerm(FILE *in, FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileTerm(FILE *in, FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
 //expression: term(op term)*
-void compileExpression(FILE *in, FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileExpression(FILE *in, FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
 
 /*  letStatement: 'let' varName ('[' expression ']')? '=' expression ';'  */
-void compileLet(FILE *in,FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileLet(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileIf(FILE *in,FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileIf(FILE *in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileWhile(FILE * in,FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileWhile(FILE * in,FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileDo(FILE *in,FILE *outXML,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileDo(FILE *in,FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileReturn(FILE * in, FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileReturn(FILE * in, FILE *out, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileStatements(FILE *in,FILE *outXML,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileStatements(FILE *in,FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileParamaterList(FILE *in, FILE *outXML,SymbolTable *subroutineTable);
+void compileParamaterList(FILE *in, FILE *out,SymbolTable *subroutineTable);
 
-void compileVarDec(FILE *in, FILE *outXML, SymbolTable *subroutineTable);
+void compileVarDec(FILE *in, FILE *out, SymbolTable *subroutineTable);
 //should I pass the symbolTable variables as arguments into compileClassVarDec?
 //	char classSymbolTableName[250];
 	//char classSymbolTableType[250];
@@ -174,18 +174,18 @@ void compileVarDec(FILE *in, FILE *outXML, SymbolTable *subroutineTable);
 //className:identifier
 //varName:identifier
 
-void compileClassVarDec(FILE *in, FILE *outXML, char *token, SymbolTable *classTable);
+void compileClassVarDec(FILE *in, FILE *out, char *token, SymbolTable *classTable);
 
 //subroutineBody: '{' varDec* statements '}'
-void compileSubroutineBody(FILE *in,FILE *outXML,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileSubroutineBody(FILE *in,FILE *out,SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileSubroutineDec(FILE *in, FILE *outXML,SymbolTable *classTable);
+void compileSubroutineDec(FILE *in, FILE *out,SymbolTable *classTable);
 //<identifier> name:%s, type:%s, kind:%s, #:%d, category:%s, usage:%s </identifier>
 //<identifier> name:%s, type:%s(class), kind(none):%s, #:%d(none), category:%s, usage:%s </identifier>
 
 /*according to Compiling Classes(project 11, when starting to compile a class, compiler creates a class-level
 symbol table and adds to it the field and static variables declared in the class declaration. Compiler also
 creates an empty subroutine-level symbol table. No code is generated*/
-void compileClass(FILE *in, FILE *outXML);
+void compileClass(FILE *in, FILE *out);
 
 #endif
