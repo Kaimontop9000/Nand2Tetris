@@ -39,7 +39,7 @@ int main(int argc, char const *argv[])
 			return 1;
 		}
 
-		//create the output file name
+		//create the output file name, XML output
 		char single_Output_File[280];
 		make_output_filename(argv[1], single_Output_File, sizeof(single_Output_File));
 		
@@ -49,12 +49,22 @@ int main(int argc, char const *argv[])
 			printf("Error opening output file\n");
 			return 1;
 		} 
+
+		// VM output
+        char vm_Output_File[280];
+        snprintf(vm_Output_File, sizeof(vm_Output_File), "%.*s.vm", (int)(strlen(argv[1])-5), argv[1]); // replace .jack with .vm
+        FILE *outVM = fopen(vm_Output_File, "w");
+        if(outVM == NULL){
+            printf("Error opening VM output file\n");
+            return 1;
+        }
 	/*Up next is for single file tokenization*/
 //=============================================
-		compileClass(inputFile, outputFile);
+		compileClass(inputFile, outputFile, outVM);
 //==============================================
 		fclose(inputFile);
 		fclose(outputFile);
+		fclose(outVM);
 	}
 	else{
 		//Step 1: open the folder 
@@ -87,7 +97,7 @@ int main(int argc, char const *argv[])
 					continue;
 				}
 
-				// create the output file name in the same folder
+				//create the output file name in the same folder XML output
 				char folder_Output_File[512];              // full path
 				char output_filename_only[280];            // just the name like FooT.xml
 				make_output_filename(entry->d_name, output_filename_only, sizeof(output_filename_only));
@@ -99,12 +109,22 @@ int main(int argc, char const *argv[])
 					printf("Error opening output file\n");
 					return 1;
 				}
+
+				// VM output
+                char vm_Output_File[512];
+                snprintf(vm_Output_File, sizeof(vm_Output_File), "%s/%.*s.vm", argv[1], (int)(strlen(entry->d_name)-5), entry->d_name);
+                FILE *outVM = fopen(vm_Output_File, "w");
+                if(outVM == NULL){
+                    printf("Error opening VM output file\n");
+                    return 1;
+                }
 	/*Up next is for folder with one or more files tokenization*/
 //=======================================================================================================================
-				compileClass(folderFile, F_OutputFile);
+				compileClass(folderFile, F_OutputFile, outVM);
 //================================================================================================================================
 				fclose(folderFile);
 				fclose(F_OutputFile);
+				fclose(outVM);
 			}
 		}
 		closedir(folder);

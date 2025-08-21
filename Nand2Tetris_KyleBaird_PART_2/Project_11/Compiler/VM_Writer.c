@@ -25,8 +25,8 @@ void writeIf(FILE *outVM, const char *label) {
     fprintf(outVM, "if-goto %s\n", label);
 }
 
-void writeFunction(FILE *outVM, const char *name, int nVars) {
-    fprintf(outVM, "function %s %d\n", name, nVars);
+void writeFunction(FILE *outVM, const char *className, const char *subroutineName, int nVars) {
+    fprintf(outVM, "function %s.%s %d\n", className, subroutineName, nVars);
 }
 
 void writeCall(FILE *outVM, const char *name, int nArgs) {

@@ -134,17 +134,17 @@ void compileExpression(FILE *in, FILE *outXML, SymbolTable *subroutineTable, Sym
 
 
 /*  letStatement: 'let' varName ('[' expression ']')? '=' expression ';'  */
-void compileLet(FILE *in,FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileLet(FILE *in,FILE *outXML, FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileIf(FILE *in,FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileIf(FILE *in,FILE *outXML, FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileWhile(FILE * in,FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileDo(FILE *in,FILE *outXML,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileDo(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileReturn(FILE * in, FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable);
 
-void compileStatements(FILE *in,FILE *outXML,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileStatements(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable);
 
 void compileParamaterList(FILE *in, FILE *outXML,SymbolTable *subroutineTable);
 
@@ -177,15 +177,16 @@ void compileVarDec(FILE *in, FILE *outXML, SymbolTable *subroutineTable);
 void compileClassVarDec(FILE *in, FILE *outXML, char *token, SymbolTable *classTable);
 
 //subroutineBody: '{' varDec* statements '}'
-void compileSubroutineBody(FILE *in,FILE *outXML,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileSubroutineBody(FILE *in, FILE *outXML, FILE *outVM,SymbolTable *subroutineTable, 
+SymbolTable *classTable,const char *className,const char *subroutineKind, const char *subroutineName);
 
-void compileSubroutineDec(FILE *in, FILE *outXML,SymbolTable *classTable);
+void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *classTable, const char *className);
 //<identifier> name:%s, type:%s, kind:%s, #:%d, category:%s, usage:%s </identifier>
 //<identifier> name:%s, type:%s(class), kind(none):%s, #:%d(none), category:%s, usage:%s </identifier>
 
 /*according to Compiling Classes(project 11, when starting to compile a class, compiler creates a class-level
 symbol table and adds to it the field and static variables declared in the class declaration. Compiler also
 creates an empty subroutine-level symbol table. No code is generated*/
-void compileClass(FILE *in, FILE *outXML);
+void compileClass(FILE *in, FILE *outXML, FILE *outVM);
 
 #endif

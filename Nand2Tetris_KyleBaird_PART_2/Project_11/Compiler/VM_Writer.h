@@ -24,7 +24,7 @@ void writeIf(FILE *outVM, const char *label);
 void writeCall(FILE *outVM, const char *name, int nArgs);
 
 /*Writes a VM function command*/
-void writeFunction(FILE *outVM, const char *name, int nVars);
+void writeFunction(FILE *outVM, const char *className, const char *subroutineName, int nVars);
 
 /*Writes a VM return command*/
 void writeReturn(FILE *outVM);
