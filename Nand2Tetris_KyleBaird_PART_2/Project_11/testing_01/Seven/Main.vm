@@ -1,0 +1,4 @@
+function Main.main 0
+call Math.multiply 2
+add
+pop temp 0

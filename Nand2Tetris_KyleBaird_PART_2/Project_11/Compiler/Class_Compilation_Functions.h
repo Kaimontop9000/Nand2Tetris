@@ -122,29 +122,38 @@ void printXmlToken(int tokenDefinedbyX, FILE *outXML);
 
 void process(char *process,  FILE *in,  FILE *outXML);
 
-void compileExpressionList(FILE *in, FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+int compileExpressionList(FILE *in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
+	const char *className);
 
 
 //term: integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
 //	'(' expression ')' |(unaryOp term) |subroutineCall
-void compileTerm(FILE *in, FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileTerm(FILE *in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable, 
+	const char *className);
 
 //expression: term(op term)*
-void compileExpression(FILE *in, FILE *outXML, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileExpression(FILE *in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
+	const char *className);
 
 
 /*  letStatement: 'let' varName ('[' expression ']')? '=' expression ';'  */
-void compileLet(FILE *in,FILE *outXML, FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileLet(FILE *in,FILE *outXML, FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
+	const char *className);
 
-void compileIf(FILE *in,FILE *outXML, FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileIf(FILE *in,FILE *outXML, FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
+	const char *className);
 
-void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
+	const char *className);
 
-void compileDo(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileDo(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
+	const char *className);
 
-void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
+	const char *className);
 
-void compileStatements(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable);
+void compileStatements(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
+	const char *className);
 
 void compileParamaterList(FILE *in, FILE *outXML,SymbolTable *subroutineTable);
 
