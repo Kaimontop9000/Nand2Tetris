@@ -162,16 +162,32 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 
 	if(x == INT_CONST){
 		fprintf(outXML, "<integerConstant> %s </integerConstant>\n",token);
+		fprintf(outVM,"push constant %s\n", token);
 		//if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
 		//    printf("token read: %s\n",token );
 		//}
 	}else if(x == STRING_CONST){
 		fprintf(outXML, "<stringConstant> %s </stringConstant>\n",token);
+		int len = strlen(token);
+		fprintf(outVM, "push constant %d\n", len);
+		fprintf(outVM,"call String.new 1\n");
+
+		for(int i = 0;i < len; i++){
+			fprintf(outVM, "push constant %d\n",token[i]);
+			fprintf(outVM, "call String.appendChar 2\n");
+		}
 		//if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
 		//    printf("token read: %s\n",token );
-	}else if(strcmp(token, "true")==0||strcmp(token,"false")==0||
-	strcmp(token,"null")==0||strcmp(token,"this")==0){
+	}else if(strcmp(token, "true")==0){
 		fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		fprintf(outVM, "push constant 0 \n");
+		fprintf(outVM,"not\n");
+	}else if(strcmp(token,"false")==0||strcmp(token,"null")==0){
+		fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		fprintf(outVM, "push constant 0\n");
+	}else if(strcmp(token,"this")==0){
+		fprintf(outXML, "<keyword> %s </keyword>\n",token);
+		fprintf(outVM, "push pointer 0\n");
 		//if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
 		//    printf("token read: %s\n",token );
 		//}
@@ -280,10 +296,23 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 		}
 	}else if(strcmp(token,"~")==0 || strcmp(token,"-")==0){
 		fprintf(outXML, "<symbol> %s </symbol>\n",token);
+		
+		// store which unary op we saw
+    	char unaryOp[3];
+    	strcpy(unaryOp, token);
+
 		if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     		printf("token read: %s\n",token );
 		}
+		// compile the term that comes after the unary op
 		compileTerm(in,outXML,outVM, subroutineTable, classTable, className);
+
+		 // now emit the VM command for the unary op
+	    if (strcmp(unaryOp, "-") == 0) {
+   	     	fprintf(outVM, "neg\n");
+   		} else if (strcmp(unaryOp, "~") == 0) {
+        	fprintf(outVM, "not\n");
+    	}
 		fprintf(outXML, "</term>\n");
 		return;
 	}
