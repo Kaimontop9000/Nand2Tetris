@@ -237,12 +237,22 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 
 		}else if(strcmp(tokenL1,"(")==0){
 			fprintf(outXML, "<identifier> %s </identifier>\n",identifier);
+
+			// advance past '('
 			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			printf("token read: %s\n",token );
 			}
 			process("(", in,outXML);
-			compileExpressionList(in, outXML,outVM, subroutineTable, classTable, className);
+
+			int nArgs = compileExpressionList(in, outXML,outVM, subroutineTable, classTable, className);
 			process(")", in, outXML);
+
+			// Minimal change: generate VM call for this function
+	    	char fullName[512];
+    		snprintf(fullName, sizeof(fullName), "%s.%s", className, identifier);  // assume it's in current class
+   		 	writeCall(outVM, fullName, nArgs);
+
+
 			fprintf(outXML, "</term>\n");
 			return;
 
@@ -267,13 +277,23 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 			process(".", in, outXML);
 
             // subroutine name
+            char subroutineName[128];
+   		 	strcpy(subroutineName, token);
 			fprintf(outXML, "<identifier> %s </identifier>\n",token);
+			
 			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			printf("token read: %s\n",token );
 			}
 			process("(", in,outXML);
-			compileExpressionList(in,outXML,outVM, subroutineTable, classTable,className);
+
+			int nArgs = compileExpressionList(in,outXML,outVM, subroutineTable, classTable,className);
 			process(")", in,outXML);
+
+			// Minimal change: generate VM call
+    		char fullName[512];
+			snprintf(fullName, sizeof(fullName), "%s.%s", identifier, subroutineName); // use ClassName.methodName or varName.methodName
+    		writeCall(outVM, fullName, nArgs);
+
 			fprintf(outXML, "</term>\n");
 			return;
 		}else {
@@ -535,8 +555,17 @@ void compileDo(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, 
    			printf("token read: %s\n",token );
 		}
 		process("(", in,outXML);
+		// Handle argument list
 		nArgs = compileExpressionList(in,outXML,outVM,subroutineTable, classTable,className);
 		process(")", in,outXML);
+
+
+   		 // --- Build fullName ---
+   		char fullName[256];
+   		sprintf(fullName, "%s.%s", classOrVar, methodName);
+
+    	// --- Write VM call ---
+    	writeCall(outVM, fullName, nArgs);
 		//if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     			//fprintf(out,"token read after symbol: %s\n",token );
 		//	}
@@ -563,13 +592,15 @@ void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineT
 	strcmp(token,"null")==0||strcmp(token,"this")==0){
 		
 		compileExpression(in,outXML,outVM, subroutineTable, classTable,className);
-	}else if(strcmp(token,";")==0){
+	}if(strcmp(token,";")==0){
+		// return;  → push constant 0
+        writePush(outVM, "constant", 0);
 		process(";",in,outXML);
 	}
+	   
+	// Every return must end with VM return
+    writeReturn(outVM);
 
-	if(strcmp(token,";")==0){
-		process(";",in,outXML);
-	}
 	fprintf(outXML, "</returnStatement>\n");
 	printf("</returnStatement>\n");
 }
