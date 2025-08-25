@@ -297,6 +297,16 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 			fprintf(outXML, "</term>\n");
 			return;
 		}else {
+
+			Kind k = kindOf(subroutineTable, identifier);
+		    int idx = indexOf(subroutineTable, identifier);
+
+		    if (k == KIND_NONE) {
+		        k = kindOf(classTable, identifier);
+		        idx = indexOf(classTable, identifier);
+		    }
+
+
 			fprintf(outXML, "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
             identifier,
             (kindOf(subroutineTable, identifier) == KIND_STATIC ? "static" :
@@ -310,7 +320,18 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
             (kindOf(subroutineTable, identifier) != KIND_NONE ? indexOf(subroutineTable, identifier) :
             kindOf(classTable, identifier) != KIND_NONE ? indexOf(classTable, identifier) : -1)
             );
-  
+
+             // *** FIX: push the variable’s value onto the stack ***
+		    if (k != KIND_NONE) {
+		        fprintf(outVM, "push %s %d\n",
+		            (k == KIND_VAR ? "local" :
+		             k == KIND_ARG ? "argument" :
+		             k == KIND_STATIC ? "static" :
+		             k == KIND_FIELD ? "this" : "pointer"),
+		            idx
+		        );
+		    }
+
 			strcpy(token, tokenL1);  // restore token for parent context
 			stringFlag = flagL1;
 		}
@@ -410,14 +431,18 @@ void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable,
 
 	fprintf(outXML, "<letStatement>\n");
 	printf("<letStatement>\n");
+
 	//let keyword
 	process("let",in,outXML);
 
 	//varName
 	int x = tokenType(token, stringFlag);
+	Kind k = KIND_NONE;
+	int idx = -1;
+
 	if(x == IDENTIFIER){
-		Kind k = kindOf(subroutineTable, token);
-    	int idx = indexOf(subroutineTable, token);
+		k = kindOf(subroutineTable, token);
+    	idx = indexOf(subroutineTable, token);
 
     	// If not in subroutine table, check class table
     	if(k == KIND_NONE){
@@ -442,7 +467,7 @@ void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable,
     	printf("token read: %s\n",token );
 	}
 
-
+	// Handle array assignment (varName[expression] = ...)
 	if(strcmp(token,"[")==0){
 		process("[",in,outXML);
 		compileExpression(in, outXML,outVM, subroutineTable, classTable,className);
@@ -455,6 +480,18 @@ void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable,
 		process("=", in, outXML);
 	
 		compileExpression(in,outXML,outVM,subroutineTable, classTable,className);
+		
+		// Emit VM pop into variable (only for simple let right now)
+		if (k == KIND_VAR) {
+			fprintf(outVM, "pop local %d\n", idx);
+		} else if (k == KIND_ARG) {
+			fprintf(outVM, "pop argument %d\n", idx);
+		} else if (k == KIND_STATIC) {
+			fprintf(outVM, "pop static %d\n", idx);
+		} else if (k == KIND_FIELD) {
+			fprintf(outVM, "pop this %d\n", idx);
+		}
+
 		//;
 		if(strcmp(token,";")==0){
 		process(";",in,outXML);
@@ -882,8 +919,6 @@ SymbolTable *classTable,const char *className,const char *subroutineKind, const 
 	printf("<subroutineBody>\n");
 	process("{", in, outXML);
 
-	// --- Count local variables first ---
-    int nLocals = 0;
     FILE *inCopy = in;  // assume advance/hasMoreTokens moves the global token
     char tokenBackup[MAX_NAME_LEN];
     strcpy(tokenBackup, token); // save current token
@@ -891,12 +926,16 @@ SymbolTable *classTable,const char *className,const char *subroutineKind, const 
     // simple scan: count 'var' statements
     while (strcmp(token, "}") != 0) {
         if (strcmp(token, "var") == 0) {
-            nLocals++;
+            //nLocals++;
             compileVarDec(in, outXML, subroutineTable);  // this advances token
         } else {
             break;
         }
     }
+
+    // --- Count locals using the symbol table (KIND_VAR only) ---
+    Kind kind = KIND_VAR;
+    int nLocals = varCount(subroutineTable,kind);
 
     // --- Emit function command ---
     writeFunction(outVM, className, subroutineName, nLocals);
