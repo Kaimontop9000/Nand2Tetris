@@ -511,21 +511,44 @@ void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable,
 
 void compileIf(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
 	const char *className){
+	
+	static int ifCounter = 0;  // persists across calls
+    int myIf = ifCounter++;    // unique index for this if statement
+
 	fprintf(outXML, "<ifStatement>\n");
 	printf("<ifStatement>\n");
+
 	process("if",in,outXML);
 	process("(",in,outXML);
+
 	compileExpression(in,outXML,outVM,subroutineTable, classTable,className);
+	
 	process(")",in,outXML);
 	process("{",in,outXML);
+	
+	// label for IF_TRUE and IF_FALSE
+    fprintf(outVM, "if-goto IF_TRUE%d\n", myIf);
+    fprintf(outVM, "goto IF_FALSE%d\n", myIf);
+    fprintf(outVM, "label IF_TRUE%d\n", myIf);
+
 	compileStatements(in,outXML,outVM,subroutineTable, classTable, className);
 	process("}",in,outXML);
+
 	if(strcmp(token,"else")==0){
 		process("else",in,outXML);
 		process("{",in,outXML);
+
+		fprintf(outVM, "goto IF_END%d\n", myIf);
+        fprintf(outVM, "label IF_FALSE%d\n", myIf);
+		
 		compileStatements(in,outXML, outVM, subroutineTable, classTable, className);
+
 		process("}",in,outXML);
-	}
+		fprintf(outVM, "label IF_END%d\n", myIf);
+	}else {
+        fprintf(outVM, "label IF_FALSE%d\n", myIf);
+    }
+    
 	fprintf(outXML, "</ifStatement>\n");
 	printf("</ifstatement>\n");
 }
@@ -535,13 +558,36 @@ void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTab
 	fprintf(outXML, "<whileStatement>\n");
 	printf("<whileStatement>\n");
 
+	static int whileCounter = 0;
+    int id = whileCounter++;
+
+    // 'while'
 	process("while",in,outXML);
+	
+    // --- VM: label for start of while condition ---
+    fprintf(outVM, "label WHILE_EXP%d\n", id);
+
+
+    // '(' expression ')'
 	process("(",in,outXML);
 	compileExpression(in,outXML, outVM,subroutineTable, classTable,className);
 	process(")",in,outXML);
+
+	// --- VM: condition check ---
+    // Jack expects: while (expr) { ... }
+    // VM needs: if expr == false -> exit
+    fprintf(outVM, "not\n");
+    fprintf(outVM, "if-goto WHILE_END%d\n", id);
+
+    // '{' statements '}'
 	process("{",in,outXML);
 	compileStatements(in,outXML,outVM, subroutineTable, classTable,className);
 	process("}",in,outXML);
+
+	// --- VM: jump back to start ---
+    fprintf(outVM, "goto WHILE_EXP%d\n", id);
+    fprintf(outVM, "label WHILE_END%d\n", id);
+
 	fprintf(outXML, "</whileStatement>\n");
 	printf("</whileStatement>\n");
 }
@@ -939,6 +985,12 @@ SymbolTable *classTable,const char *className,const char *subroutineKind, const 
 
     // --- Emit function command ---
     writeFunction(outVM, className, subroutineName, nLocals);
+
+    // --- Initialize locals to 0 (VM spec §8.5) ---
+    for (int i = 0; i < nLocals; i++) {           
+        fprintf(outVM, "push constant 0\n");      
+        fprintf(outVM, "pop local %d\n", i);      
+    }          
 
     // --- Compile remaining statements ---
     while (strcmp(token, "}") != 0) {
