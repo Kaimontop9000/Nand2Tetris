@@ -141,19 +141,19 @@ void compileLet(FILE *in,FILE *outXML, FILE *outVM, SymbolTable *subroutineTable
 	const char *className);
 
 void compileIf(FILE *in,FILE *outXML, FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
-	const char *className);
+	const char *className,const char *returnType);
 
 void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
-	const char *className);
+	const char *className,const char *returnType);
 
 void compileDo(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
 	const char *className);
 
 void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
-	const char *className);
+	const char *className, const char *returnType);
 
 void compileStatements(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
-	const char *className);
+	const char *className, const char *returnType);
 
 void compileParamaterList(FILE *in, FILE *outXML,SymbolTable *subroutineTable);
 
@@ -187,9 +187,11 @@ void compileClassVarDec(FILE *in, FILE *outXML, char *token, SymbolTable *classT
 
 //subroutineBody: '{' varDec* statements '}'
 void compileSubroutineBody(FILE *in, FILE *outXML, FILE *outVM,SymbolTable *subroutineTable, 
-SymbolTable *classTable,const char *className,const char *subroutineKind, const char *subroutineName);
+SymbolTable *classTable,const char *className,const char *subroutineKind, const char *subroutineName,
+const char *returnType);
 
-void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *classTable, const char *className);
+void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *classTable, const char *className,
+	char *returnType);
 //<identifier> name:%s, type:%s, kind:%s, #:%d, category:%s, usage:%s </identifier>
 //<identifier> name:%s, type:%s(class), kind(none):%s, #:%d(none), category:%s, usage:%s </identifier>
 

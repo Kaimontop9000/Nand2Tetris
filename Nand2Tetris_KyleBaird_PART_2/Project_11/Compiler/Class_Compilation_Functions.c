@@ -510,7 +510,7 @@ void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable,
 }
 
 void compileIf(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
-	const char *className){
+	const char *className,const char *returnType){
 	
 	static int ifCounter = 0;  // persists across calls
     int myIf = ifCounter++;    // unique index for this if statement
@@ -531,7 +531,7 @@ void compileIf(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, 
     fprintf(outVM, "goto IF_FALSE%d\n", myIf);
     fprintf(outVM, "label IF_TRUE%d\n", myIf);
 
-	compileStatements(in,outXML,outVM,subroutineTable, classTable, className);
+	compileStatements(in,outXML,outVM,subroutineTable, classTable, className, returnType);
 	process("}",in,outXML);
 
 	if(strcmp(token,"else")==0){
@@ -541,7 +541,7 @@ void compileIf(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, 
 		fprintf(outVM, "goto IF_END%d\n", myIf);
         fprintf(outVM, "label IF_FALSE%d\n", myIf);
 		
-		compileStatements(in,outXML, outVM, subroutineTable, classTable, className);
+		compileStatements(in,outXML, outVM, subroutineTable, classTable, className,returnType);
 
 		process("}",in,outXML);
 		fprintf(outVM, "label IF_END%d\n", myIf);
@@ -554,7 +554,7 @@ void compileIf(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, 
 }
 
 void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
-	const char *className){
+	const char *className,const char *returnType){
 	fprintf(outXML, "<whileStatement>\n");
 	printf("<whileStatement>\n");
 
@@ -581,7 +581,7 @@ void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTab
 
     // '{' statements '}'
 	process("{",in,outXML);
-	compileStatements(in,outXML,outVM, subroutineTable, classTable,className);
+	compileStatements(in,outXML,outVM, subroutineTable, classTable,className, returnType);
 	process("}",in,outXML);
 
 	// --- VM: jump back to start ---
@@ -663,11 +663,12 @@ void compileDo(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, 
 }
 
 void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
-	const char *className){
+	const char *className, const char *returnType){
 	fprintf(outXML, "<returnStatement>\n");
 	printf("<returnStatement>\n");
 	process("return", in,outXML);
-	
+
+	/*
 	int x = tokenType(token, stringFlag);
 
 	if(x == INT_CONST||x == STRING_CONST|| x == IDENTIFIER ||
@@ -675,11 +676,24 @@ void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineT
 	strcmp(token,"null")==0||strcmp(token,"this")==0){
 		
 		compileExpression(in,outXML,outVM, subroutineTable, classTable,className);
-	}if(strcmp(token,";")==0){
+	}
+
+	if(strcmp(token,";")==0){
 		// return;  → push constant 0
         writePush(outVM, "constant", 0);
 		process(";",in,outXML);
-	}
+	}*/
+
+	if (strcmp(returnType, "void") == 0) {
+        // Expect only ";", push dummy 0
+        process(";", in, outXML);
+        writePush(outVM, "constant", 0);
+    } else {
+        // Must compile expression (something to return)
+        compileExpression(in, outXML, outVM, subroutineTable, classTable, className);
+        process(";", in, outXML);
+    }
+
 	   
 	// Every return must end with VM return
     writeReturn(outVM);
@@ -689,7 +703,7 @@ void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineT
 }
 
 void compileStatements(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
-	const char *className){
+	const char *className, const char *returnType){
 	printf("<statements>\n");
 	fprintf(outXML, "<statements>\n");
 
@@ -701,13 +715,13 @@ void compileStatements(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutine
 			if(strcmp(token, "let")==0){
 				compileLet(in,outXML,outVM,subroutineTable,classTable,className);
 			}else if(strcmp(token, "if")==0){
-				compileIf(in, outXML,outVM,subroutineTable,classTable,className);
+				compileIf(in, outXML,outVM,subroutineTable,classTable,className,returnType);
 			}else if(strcmp(token, "while")==0){
-				compileWhile(in, outXML,outVM,subroutineTable,classTable,className);
+				compileWhile(in, outXML,outVM,subroutineTable,classTable,className,returnType);
 			}else if(strcmp(token, "do")==0){
 				compileDo(in, outXML,outVM,subroutineTable,classTable,className);
 			}else if(strcmp(token, "return")==0){
-				compileReturn(in, outXML,outVM,subroutineTable,classTable,className);
+				compileReturn(in, outXML,outVM,subroutineTable,classTable,className,returnType);
 			}else{
 				break;
 			}
@@ -960,7 +974,8 @@ void compileClassVarDec(FILE *in, FILE *outXML, char *token, SymbolTable *classT
 
 //subroutineBody: '{' varDec* statements '}'
 void compileSubroutineBody(FILE *in, FILE *outXML, FILE *outVM,SymbolTable *subroutineTable, 
-SymbolTable *classTable,const char *className,const char *subroutineKind, const char *subroutineName){
+SymbolTable *classTable,const char *className,const char *subroutineKind, const char *subroutineName,
+const char *returnType){
 	fprintf(outXML, "<subroutineBody>\n");
 	printf("<subroutineBody>\n");
 	process("{", in, outXML);
@@ -994,7 +1009,7 @@ SymbolTable *classTable,const char *className,const char *subroutineKind, const 
 
     // --- Compile remaining statements ---
     while (strcmp(token, "}") != 0) {
-        compileStatements(in, outXML, outVM, subroutineTable, classTable, className);
+        compileStatements(in, outXML, outVM, subroutineTable, classTable, className, returnType);
     }
 
 	process("}",in, outXML);
@@ -1003,12 +1018,13 @@ SymbolTable *classTable,const char *className,const char *subroutineKind, const 
 }
 
 
-void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *classTable, const char *className){
+void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *classTable, const char *className,
+	char *returnType){
 	SymbolTable subroutineTable;
     construct_Symbol_Table(&subroutineTable);  // reset for this subroutine
 
     char subroutineKind[32];   // constructor, function, method
-    char returnType[64];       // return type
+    
     char subroutineName[128];  // function name (e.g. "main")
 
 	fprintf(outXML, "<subroutineDec>\n");
@@ -1052,7 +1068,8 @@ void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *clas
 	process( ")" , in, outXML);
 	
 	 // Subroutine body
-    compileSubroutineBody(in, outXML, outVM, &subroutineTable, classTable, className, subroutineKind, subroutineName);
+    compileSubroutineBody(in, outXML, outVM, &subroutineTable, classTable, className, subroutineKind, subroutineName,
+    	returnType);
 		
 	fprintf(outXML, "</subroutineDec>\n");
 	printf("</subroutineDec>\n");
@@ -1070,6 +1087,8 @@ void compileClass(FILE *in, FILE *outXML, FILE *outVM){
 
 	SymbolTable classTable;            // local class-level symbol table
     construct_Symbol_Table(&classTable);  // initialize/reset table
+
+    char subroutineReturnType[64];       // return type
 
 	while(hasMoreTokens(in)) {
     	advance(in, token, &stringFlag); // prime the first token
@@ -1104,7 +1123,7 @@ void compileClass(FILE *in, FILE *outXML, FILE *outVM){
 		if(strcmp(token, "constructor") == 0 || 
     	strcmp(token,"function") == 0 || 
     	strcmp(token,"method") == 0) {
-    		compileSubroutineDec(in, outXML,outVM,&classTable, className);
+    		compileSubroutineDec(in, outXML,outVM,&classTable, className, subroutineReturnType);
 		}else{
 			break;
 		}

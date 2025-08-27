@@ -84,14 +84,12 @@ if-goto IF_TRUE2
 goto IF_FALSE2
 label IF_TRUE2
 push constant 1
-push constant 0
 return
 goto IF_END2
 label IF_FALSE2
 push argument 0
 push constant 2
 call Math.multiply 2
-push constant 0
 return
 label IF_END2
 function Main.fillMemory 0
