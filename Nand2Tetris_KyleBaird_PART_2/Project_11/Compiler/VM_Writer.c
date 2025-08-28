@@ -30,6 +30,7 @@ void writeFunction(FILE *outVM, const char *className, const char *subroutineNam
 }
 
 void writeCall(FILE *outVM, const char *name, int nArgs) {
+    printf("\n\nDEBUG: writeCall called with name='%s' nArgs=%d\n\n", name, nArgs);
     fprintf(outVM, "call %s %d\n", name, nArgs);
 }
 

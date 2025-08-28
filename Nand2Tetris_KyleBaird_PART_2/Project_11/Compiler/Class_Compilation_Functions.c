@@ -151,7 +151,6 @@ int compileExpressionList(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subrou
 
 
 //term: integerConstant |stringConstant |keywordConstant |varName |varName '[' expression ']'| 
-//	'(' expression ')' |(unaryOp term) |subroutineCall
 void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
 	 const char *className){
 	fprintf(outXML, "<term>\n");
@@ -194,7 +193,7 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 
 	// identifier (varName, subroutineCall, array access)
 	}else if(x == IDENTIFIER){
-
+		printf("token when we know its an identifier :%s\n\n",token);
 		char identifier[250];
 		strcpy(identifier, token); // save it
 
@@ -238,6 +237,7 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 			return;
 
 		}else if(strcmp(tokenL1,"(")==0){
+			printf("tokenL1 when we check if tokenL1 is ( , tokenL1 ; %s, token ; %s\n\n", tokenL1, token);
 			fprintf(outXML, "<identifier> %s </identifier>\n",identifier);
 
 			// advance past '('
@@ -252,6 +252,7 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 			// Minimal change: generate VM call for this function
 	    	char fullName[512];
     		snprintf(fullName, sizeof(fullName), "%s.%s", className, identifier);  // assume it's in current class
+   		 	
    		 	writeCall(outVM, fullName, nArgs);
 
 
@@ -261,6 +262,7 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 		}else if(strcmp(tokenL1,".")==0){
 		    // --- OBJECT.METHOD(...) or CONSTRUCTOR HANDLING ---
 		    // token = identifier before '.'
+		    printf("tokenL1 is . \n tokenl1 ; %s token ; %s\n", tokenL1, token);
 		    fprintf(outXML, "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
 		        identifier,
 		        (kindOf(subroutineTable, identifier) == KIND_STATIC ? "static" :
@@ -289,7 +291,10 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 		    char subroutineName[128];
 		    strcpy(subroutineName, token);
 		    fprintf(outXML, "<identifier> %s </identifier>\n", token);
-		    
+		    if(hasMoreTokens(in) && advance(in, token, &stringFlag)) {
+		        printf("DEBUG: token before process ( is %s\n", token);
+		    }
+		   
 		    process("(", in, outXML);
 
 		    int nArgs = compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
@@ -336,7 +341,7 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 		            fprintf(outVM, "pop pointer 0\n"); // set 'this' to allocated object
 		        }
 		    }
-
+		    printf("before writeCall within tokenl1 is . \n tokenl1 %s; token ; %s", tokenL1, token);
 		    writeCall(outVM, fullName, nArgs);
 		    fprintf(outXML, "</term>\n");
 		   
@@ -420,7 +425,6 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 
 
 }
-
 //expression: term(op term)*
 void compileExpression(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable, SymbolTable *classTable,
 	const char *className){
@@ -790,7 +794,7 @@ void compileDo(FILE *in, FILE *outXML, FILE *outVM,
             }
         }
     }
-
+    printf("\n\nDEBUG: compileDo issuing call to %s with %d args\n\n", fullName, nArgs);
     writeCall(outVM, fullName, nArgs);
     process(";", in, outXML);
 
@@ -845,6 +849,7 @@ void compileStatements(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutine
 	const char *className, const char *returnType){
 	printf("<statements>\n");
 	fprintf(outXML, "<statements>\n");
+	
 
 	//while (strcmp(token, "let") == 0 || strcmp(token, "if") == 0 ||
    // strcmp(token, "while") == 0 || strcmp(token, "do") == 0 ||
@@ -866,6 +871,7 @@ void compileStatements(FILE *in,FILE *outXML,FILE *outVM,SymbolTable *subroutine
 			}
 		}
 	//}
+
 	fprintf(outXML, "</statements>\n");
 	printf("</statements>\n");
 }
