@@ -191,6 +191,8 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 		//if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
 		//    printf("token read: %s\n",token );
 		//}
+
+	// identifier (varName, subroutineCall, array access)
 	}else if(x == IDENTIFIER){
 
 		char identifier[250];
@@ -257,45 +259,89 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 			return;
 
 		}else if(strcmp(tokenL1,".")==0){
-			
-			fprintf(outXML, "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
-            identifier,
-            (kindOf(subroutineTable, identifier) == KIND_STATIC ? "static" :
-            kindOf(subroutineTable, identifier) == KIND_FIELD  ? "field"  :
-            kindOf(subroutineTable, identifier) == KIND_ARG    ? "arg"    :
-            kindOf(subroutineTable, identifier) == KIND_VAR    ? "var"    :
-            kindOf(classTable, identifier) == KIND_STATIC ? "static" :
-            kindOf(classTable, identifier) == KIND_FIELD  ? "field"  :
-            kindOf(classTable, identifier) == KIND_ARG    ? "arg"    :
-            kindOf(classTable, identifier) == KIND_VAR    ? "var"    : "none"),
-            (kindOf(subroutineTable, identifier) != KIND_NONE ? indexOf(subroutineTable, identifier) :
-            kindOf(classTable, identifier) != KIND_NONE ? indexOf(classTable, identifier) : -1)
-            );
-			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
-    			printf("token read: %s\n",token );
-			}
-			process(".", in, outXML);
+		    // --- OBJECT.METHOD(...) or CONSTRUCTOR HANDLING ---
+		    // token = identifier before '.'
+		    fprintf(outXML, "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
+		        identifier,
+		        (kindOf(subroutineTable, identifier) == KIND_STATIC ? "static" :
+		        kindOf(subroutineTable, identifier) == KIND_FIELD  ? "field"  :
+		        kindOf(subroutineTable, identifier) == KIND_ARG    ? "arg"    :
+		        kindOf(subroutineTable, identifier) == KIND_VAR    ? "var"    :
+		        kindOf(classTable, identifier) == KIND_STATIC ? "static" :
+		        kindOf(classTable, identifier) == KIND_FIELD  ? "field"  :
+		        kindOf(classTable, identifier) == KIND_ARG    ? "arg"    :
+		        kindOf(classTable, identifier) == KIND_VAR    ? "var"    : "none"),
+		        (kindOf(subroutineTable, identifier) != KIND_NONE ? indexOf(subroutineTable, identifier) :
+		        kindOf(classTable, identifier) != KIND_NONE ? indexOf(classTable, identifier) : -1)
+		    );
 
-            // subroutine name
-            char subroutineName[128];
-   		 	strcpy(subroutineName, token);
-			fprintf(outXML, "<identifier> %s </identifier>\n",token);
-			
-			if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
-    			printf("token read: %s\n",token );
-			}
-			process("(", in,outXML);
+		    // Advance to the subroutine/method name
+    		if(hasMoreTokens(in) && advance(in, token, &stringFlag)) {
+		        printf("DEBUG: token before process . is %s\n", token);
+		    }
 
-			int nArgs = compileExpressionList(in,outXML,outVM, subroutineTable, classTable,className);
-			process(")", in,outXML);
+		    
+		    process(".", in, outXML);
+		   		 
+		    printf("DEBUG: token after process . is %s\n", token);
 
-			// Minimal change: generate VM call
-    		char fullName[512];
-			snprintf(fullName, sizeof(fullName), "%s.%s", identifier, subroutineName); // use ClassName.methodName or varName.methodName
-    		writeCall(outVM, fullName, nArgs);
+		    // subroutine name
+		    char subroutineName[128];
+		    strcpy(subroutineName, token);
+		    fprintf(outXML, "<identifier> %s </identifier>\n", token);
+		    
+		    process("(", in, outXML);
 
-			fprintf(outXML, "</term>\n");
-			return;
+		    int nArgs = compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
+		    process(")", in, outXML);
+
+		    // --- VM call generation ---
+		    Kind k = kindOf(subroutineTable, identifier);
+		    int idx = indexOf(subroutineTable, identifier);
+		    char *type = typeOf(subroutineTable, identifier);
+
+		    if(k == KIND_NONE){
+		        k = kindOf(classTable, identifier);
+		        idx = indexOf(classTable, identifier);
+		        type = typeOf(classTable, identifier);
+		        printf("DEBUG: identifier='%s' kind=%d idx=%d type='%s'\n",
+       identifier, k, idx, typeOf(subroutineTable, identifier));
+		    }
+
+		    char fullName[512];
+
+		    if(k != KIND_NONE){
+		        // object method → push object reference first
+
+		        fprintf(outVM, "push %s %d\n",
+		            (k == KIND_VAR ? "local" :
+		             k == KIND_ARG ? "argument" :
+		             k == KIND_STATIC ? "static" :
+		             k == KIND_FIELD ? "this" : "pointer"),
+		            idx
+		        );
+		       
+
+		        nArgs += 1; // account for 'this'
+		         snprintf(fullName, sizeof(fullName), "%s.%s", type, subroutineName);
+		    } else {
+		        // Class method or constructor
+		        snprintf(fullName, sizeof(fullName), "%s.%s", identifier, subroutineName);
+
+		        // --- constructor special handling ---
+		        if(strcmp(subroutineName, "new") == 0){
+		            int nFields = varCount(classTable, KIND_FIELD);
+		            fprintf(outVM, "push constant %d\n", nFields);
+		            fprintf(outVM, "call Memory.alloc 1\n");
+		            fprintf(outVM, "pop pointer 0\n"); // set 'this' to allocated object
+		        }
+		    }
+
+		    writeCall(outVM, fullName, nArgs);
+		    fprintf(outXML, "</term>\n");
+		   
+		    return;
+
 		}else {
 
 			Kind k = kindOf(subroutineTable, identifier);
@@ -371,6 +417,8 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 	}
 	fprintf(outXML, "</term>\n");
 	printf("</term>\n");
+
+
 }
 
 //expression: term(op term)*
@@ -592,28 +640,29 @@ void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTab
 	printf("</whileStatement>\n");
 }
 
-void compileDo(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
+/*void compileDo(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
 	const char *className){
 	fprintf(outXML, "<doStatement>\n");
 	printf("<doStatement>\n");
 	process("do",in,outXML);
 
-	// --- Handle subroutine call ---
-    char subroutineName[128];
-    char classOrVar[128];
-    int nArgs = 0;
-
     // first identifier (could be className, varName, or subroutineName)
-    strcpy(classOrVar, token);
+    char firstIdentifier[128];
+    strcpy(firstIdentifier, token); // could be className, varName, or subroutineName
 	fprintf(outXML, "<identifier> %s </identifier>\n",token);
 	
 	if (hasMoreTokens(in) && advance(in, token, &stringFlag)) {
     	printf("token read: %s\n",token );
 	}
 
+	// --- Handle subroutine call ---
+    char subroutineName[128];
+    char fullName[128];
+    int nArgs = 0;
+
 	if(strcmp(token,"(")==0){
 		// case: do foo(...)
-		strcpy(subroutineName, classOrVar);
+		strcpy(subroutineName, firstIdentifier);
 
 		process("(", in,outXML);
 		nArgs = compileExpressionList(in, outXML,outVM,subroutineTable, classTable,className);
@@ -621,9 +670,8 @@ void compileDo(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, 
 
 
         // VM call: currentClass.subroutineName
-        char fullName[256];
         sprintf(fullName, "%s.%s",className, subroutineName); 
-        writeCall(outVM, fullName, nArgs);
+        writeCall(outVM, fullName, nArgs); //check this
 
 	}else if(strcmp(token,".")==0){
 
@@ -660,6 +708,97 @@ void compileDo(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, 
 	
 	fprintf(outXML, "</doStatement>\n");
 	printf("</doStatement>\n");
+}*/
+
+void compileDo(FILE *in, FILE *outXML, FILE *outVM,
+               SymbolTable *subroutineTable, SymbolTable *classTable,
+               const char *className) {
+
+    fprintf(outXML, "<doStatement>\n");
+    printf("<doStatement>\n");
+
+    process("do", in, outXML);
+
+    char firstIdentifier[128];
+    strcpy(firstIdentifier, token); // could be className, varName, or subroutineName
+    fprintf(outXML, "<identifier> %s </identifier>\n", token);
+
+    if(hasMoreTokens(in) && advance(in, token, &stringFlag)){
+        printf("token read: %s\n", token);
+    }
+
+    char subroutineName[128];
+    int nArgs = 0;
+    char fullName[256];
+
+    if(strcmp(token,"(")==0){
+        // simple subroutine call in current class
+        strcpy(subroutineName, firstIdentifier);
+        process("(", in, outXML);
+        nArgs = compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
+        process(")", in, outXML);
+        sprintf(fullName, "%s.%s", className, subroutineName);
+    }
+    else if(strcmp(token,".")==0){
+        process(".", in, outXML);
+
+        strcpy(subroutineName, token);
+        fprintf(outXML, "<identifier> %s </identifier>\n", token);
+
+        if(hasMoreTokens(in) && advance(in, token, &stringFlag)){
+            printf("token read: %s\n", token);
+        }
+        process("(", in, outXML);
+        nArgs = compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
+        process(")", in, outXML);
+
+        // --- check if firstIdentifier is a variable ---
+        Kind k = kindOf(subroutineTable, firstIdentifier);
+        int idx = indexOf(subroutineTable, firstIdentifier);
+        if(k == KIND_NONE){
+            k = kindOf(classTable, firstIdentifier);
+            idx = indexOf(classTable, firstIdentifier);
+        }
+
+        if(k != KIND_NONE){
+            // push object reference
+            fprintf(outVM, "push %s %d\n",
+                (k == KIND_VAR ? "local" :
+                 k == KIND_ARG ? "argument" :
+                 k == KIND_FIELD ? "this" :
+                 k == KIND_STATIC ? "static" : "pointer"),
+                idx
+            );
+            nArgs += 1; // account for 'this'
+
+            // build fullName using variable type
+            sprintf(fullName, "%s.%s",
+                typeOf(subroutineTable, firstIdentifier) != NULL ? typeOf(subroutineTable, firstIdentifier) :
+                typeOf(classTable, firstIdentifier),
+                subroutineName
+            );
+        } else {
+            // class method / constructor
+            sprintf(fullName, "%s.%s", firstIdentifier, subroutineName);
+
+            // constructor handling
+            if(strcmp(subroutineName,"new")==0){
+                int nFields = varCount(classTable, KIND_FIELD);
+                fprintf(outVM, "push constant %d\n", nFields);
+                fprintf(outVM, "call Memory.alloc 1\n");
+                fprintf(outVM, "pop pointer 0\n");
+            }
+        }
+    }
+
+    writeCall(outVM, fullName, nArgs);
+    process(";", in, outXML);
+
+    // discard return value
+    writePop(outVM, "temp", 0);
+
+    fprintf(outXML, "</doStatement>\n");
+    printf("</doStatement>\n");
 }
 
 void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
@@ -1019,7 +1158,7 @@ const char *returnType){
 
 
 void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *classTable, const char *className,
-	char *returnType){
+	 char *returnType){
 	SymbolTable subroutineTable;
     construct_Symbol_Table(&subroutineTable);  // reset for this subroutine
 
@@ -1046,6 +1185,7 @@ void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *clas
 		strcpy(returnType, token);
 		fprintf(outXML, "<keyword> %s </keyword>\n", token);
 	}else if(x == IDENTIFIER){
+		strcpy(returnType, token); 
 		fprintf(outXML, "<identifier> %s </identifier>\n", token);
 	}
 

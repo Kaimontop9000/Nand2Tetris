@@ -94,3 +94,12 @@ int indexOf(SymbolTable *table, const char *name) {
     }
     return -1;  // not found
 }
+
+char* typeOf(SymbolTable *table, const char *name) {
+    for (int i = 0; i < table->count; i++) {
+        if (strcmp(table->symbols[i].name, name) == 0) {
+            return table->symbols[i].type;  // return type string
+        }
+    }
+    return NULL;  // not found
+}
