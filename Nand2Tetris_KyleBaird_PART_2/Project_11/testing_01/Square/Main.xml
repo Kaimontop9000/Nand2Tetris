@@ -28,19 +28,10 @@
 <identifier name="SquareGame" category="none" index="-1" usage="used"/>
 <symbol> . </symbol>
 <identifier> new </identifier>
-Syntax error: expected token '(' but found 'new'
-<expressionList>
-<expression>
-<term>
-<identifier> new </identifier>
 <symbol> ( </symbol>
 <expressionList>
 </expressionList>
 <symbol> ) </symbol>
-</term>
-</expression>
-</expressionList>
-Syntax error: expected token ')' but found ';'
 </term>
 </expression>
 <symbol> ; </symbol>

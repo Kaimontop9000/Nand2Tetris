@@ -1,11 +1,7 @@
 function Main.main 1
 push constant 0
 pop local 0
-call Main.new 0
-push constant 0
-call Memory.alloc 1
-pop pointer 0
-call SquareGame.new 1
+call SquareGame.new 0
 pop local 0
 push local 0
 call SquareGame.run 1

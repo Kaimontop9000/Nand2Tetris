@@ -282,7 +282,7 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 		        printf("DEBUG: token before process . is %s\n", token);
 		    }
 
-		    
+	
 		    process(".", in, outXML);
 		   		 
 		    printf("DEBUG: token after process . is %s\n", token);
@@ -332,14 +332,6 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
 		    } else {
 		        // Class method or constructor
 		        snprintf(fullName, sizeof(fullName), "%s.%s", identifier, subroutineName);
-
-		        // --- constructor special handling ---
-		        if(strcmp(subroutineName, "new") == 0){
-		            int nFields = varCount(classTable, KIND_FIELD);
-		            fprintf(outVM, "push constant %d\n", nFields);
-		            fprintf(outVM, "call Memory.alloc 1\n");
-		            fprintf(outVM, "pop pointer 0\n"); // set 'this' to allocated object
-		        }
 		    }
 		    printf("before writeCall within tokenl1 is . \n tokenl1 %s; token ; %s", tokenL1, token);
 		    writeCall(outVM, fullName, nArgs);
@@ -784,14 +776,6 @@ void compileDo(FILE *in, FILE *outXML, FILE *outVM,
         } else {
             // class method / constructor
             sprintf(fullName, "%s.%s", firstIdentifier, subroutineName);
-
-            // constructor handling
-            if(strcmp(subroutineName,"new")==0){
-                int nFields = varCount(classTable, KIND_FIELD);
-                fprintf(outVM, "push constant %d\n", nFields);
-                fprintf(outVM, "call Memory.alloc 1\n");
-                fprintf(outVM, "pop pointer 0\n");
-            }
         }
     }
     printf("\n\nDEBUG: compileDo issuing call to %s with %d args\n\n", fullName, nArgs);

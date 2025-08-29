@@ -34,11 +34,6 @@
 <identifier name="Square" category="none" index="-1" usage="used"/>
 <symbol> . </symbol>
 <identifier> new </identifier>
-Syntax error: expected token '(' but found 'new'
-<expressionList>
-<expression>
-<term>
-<identifier> new </identifier>
 <symbol> ( </symbol>
 <expressionList>
 <expression>
@@ -60,10 +55,6 @@ Syntax error: expected token '(' but found 'new'
 </expression>
 </expressionList>
 <symbol> ) </symbol>
-</term>
-</expression>
-</expressionList>
-Syntax error: expected token ')' but found ';'
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -361,19 +352,10 @@ Syntax error: expected token ')' but found ';'
 <identifier name="Keyboard" category="none" index="-1" usage="used"/>
 <symbol> . </symbol>
 <identifier> keyPressed </identifier>
-Syntax error: expected token '(' but found 'keyPressed'
-<expressionList>
-<expression>
-<term>
-<identifier> keyPressed </identifier>
 <symbol> ( </symbol>
 <expressionList>
 </expressionList>
 <symbol> ) </symbol>
-</term>
-</expression>
-</expressionList>
-Syntax error: expected token ')' but found ';'
 </term>
 </expression>
 <symbol> ; </symbol>
@@ -626,19 +608,10 @@ Syntax error: expected token ')' but found ';'
 <identifier name="Keyboard" category="none" index="-1" usage="used"/>
 <symbol> . </symbol>
 <identifier> keyPressed </identifier>
-Syntax error: expected token '(' but found 'keyPressed'
-<expressionList>
-<expression>
-<term>
-<identifier> keyPressed </identifier>
 <symbol> ( </symbol>
 <expressionList>
 </expressionList>
 <symbol> ) </symbol>
-</term>
-</expression>
-</expressionList>
-Syntax error: expected token ')' but found ';'
 </term>
 </expression>
 <symbol> ; </symbol>

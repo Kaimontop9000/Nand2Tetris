@@ -2,11 +2,7 @@ function SquareGame.new 0
 push constant 0
 push constant 0
 push constant 30
-call SquareGame.new 3
-push constant 2
-call Memory.alloc 1
-pop pointer 0
-call Square.new 1
+call Square.new 3
 pop this 0
 push constant 0
 pop this 1
@@ -85,8 +81,7 @@ push constant 0
 eq
 not
 if-goto WHILE_END1
-call SquareGame.keyPressed 0
-call Keyboard.keyPressed 1
+call Keyboard.keyPressed 0
 pop local 0
 call SquareGame.moveSquare 0
 pop temp 0
@@ -165,8 +160,7 @@ eq
 not
 not
 if-goto WHILE_END2
-call SquareGame.keyPressed 0
-call Keyboard.keyPressed 1
+call Keyboard.keyPressed 0
 pop local 0
 call SquareGame.moveSquare 0
 pop temp 0
