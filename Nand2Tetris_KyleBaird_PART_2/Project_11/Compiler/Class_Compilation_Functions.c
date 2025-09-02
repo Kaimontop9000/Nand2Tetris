@@ -1130,11 +1130,22 @@ const char *returnType){
     // --- Emit function command ---
     writeFunction(outVM, className, subroutineName, nLocals);
 
+    if (strcmp(subroutineKind, "method") == 0) {
+    	fprintf(outVM, "push argument 0\n");
+    	fprintf(outVM, "pop pointer 0\n");
+	}else if (strcmp(subroutineKind, "constructor") == 0) {
+	    int nFields = varCount(classTable, KIND_FIELD);
+	    fprintf(outVM, "push constant %d\n", nFields);
+	    fprintf(outVM, "call Memory.alloc 1\n");
+	    fprintf(outVM, "pop pointer 0\n");
+	}    
+	
     // --- Initialize locals to 0 (VM spec §8.5) ---
     for (int i = 0; i < nLocals; i++) {           
         fprintf(outVM, "push constant 0\n");      
         fprintf(outVM, "pop local %d\n", i);      
-    }          
+    }      
+
 
     // --- Compile remaining statements ---
     while (strcmp(token, "}") != 0) {
