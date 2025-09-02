@@ -470,7 +470,7 @@ void compileExpression(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutin
 
 
 /*  letStatement: 'let' varName ('[' expression ']')? '=' expression ';'  */
-void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
+/*void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
 	const char *className){
 
 	fprintf(outXML, "<letStatement>\n");
@@ -514,6 +514,7 @@ void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable,
 	// Handle array assignment (varName[expression] = ...)
 	if(strcmp(token,"[")==0){
 		process("[",in,outXML);
+
 		compileExpression(in, outXML,outVM, subroutineTable, classTable,className);
 		process("]",in,outXML);
 	}
@@ -551,7 +552,108 @@ void compileLet(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable,
 
 	fprintf(outXML, "</letStatement>\n");
 	printf("</letStatement>\n");
+}*/
+void compileLet(FILE *in, FILE *outXML, FILE *outVM,
+                SymbolTable *subroutineTable, SymbolTable *classTable,
+                const char *className) {
+
+    fprintf(outXML, "<letStatement>\n");
+    printf("<letStatement>\n");
+
+    process("let", in, outXML);  // consume 'let'
+
+    int x = tokenType(token, stringFlag);
+    Kind k = KIND_NONE;
+    int idx = -1;
+
+    if(x == IDENTIFIER){
+        k = kindOf(subroutineTable, token);
+        idx = indexOf(subroutineTable, token);
+
+        if(k == KIND_NONE){
+            k = kindOf(classTable, token);
+            idx = indexOf(classTable, token);
+        }
+
+        fprintf(outXML,
+            "<identifier name=\"%s\" category=\"%s\" index=\"%d\" usage=\"used\"/>\n",
+            token,
+            (k == KIND_STATIC ? "static" :
+             k == KIND_FIELD  ? "field"  :
+             k == KIND_ARG    ? "arg"    :
+             k == KIND_VAR    ? "var"    : "none"),
+            idx
+        );
+    }
+
+    if(hasMoreTokens(in) && advance(in, token, &stringFlag)){
+        printf("token read: %s\n", token);
+    }
+
+    int isArray = 0;
+
+    // --- handle array assignment ---
+    if(strcmp(token,"[") == 0){
+        isArray = 1;
+        process("[", in, outXML);
+
+        // --- push base address of array ---
+        // STACK: [arr_base]
+        if (k == KIND_VAR) fprintf(outVM, "push local %d\n", idx);
+        else if (k == KIND_ARG) fprintf(outVM, "push argument %d\n", idx);
+        else if (k == KIND_STATIC) fprintf(outVM, "push static %d\n", idx);
+        else if (k == KIND_FIELD) fprintf(outVM, "push this %d\n", idx);
+
+        // --- push index expression ---
+        // STACK: [arr_base, index]
+        compileExpression(in, outXML, outVM, subroutineTable, classTable, className);
+
+        // --- add to get target address ---
+        // STACK: [arr_base + index]
+        fprintf(outVM, "add\n");
+
+        process("]", in, outXML);
+    }
+
+    // --- '=' expression ---
+    if(strcmp(token,"=") == 0){
+        process("=", in, outXML);
+
+        // --- compile RHS expression ---
+        // For simple variable:
+        // STACK: [value]
+        // For array:
+        // STACK: [arr_base+index, value]
+        compileExpression(in, outXML, outVM, subroutineTable, classTable, className);
+
+        if(isArray){
+            // --- Array assignment VM sequence ---
+            // Before:
+            // STACK: [arr_base+index, value]
+            fprintf(outVM, "pop temp 0\n");    // STACK: [arr_base+index], temp0 = value
+            fprintf(outVM, "pop pointer 1\n"); // STACK: [], pointer 1 (that) = arr_base+index
+            fprintf(outVM, "push temp 0\n");   // STACK: [value]
+            fprintf(outVM, "pop that 0\n");    // value -> THAT[0]
+            // Result: arr[index] = value
+        } else {
+            // --- simple variable assignment ---
+            if (k == KIND_VAR) fprintf(outVM, "pop local %d\n", idx);
+            else if (k == KIND_ARG) fprintf(outVM, "pop argument %d\n", idx);
+            else if (k == KIND_STATIC) fprintf(outVM, "pop static %d\n", idx);
+            else if (k == KIND_FIELD) fprintf(outVM, "pop this %d\n", idx);
+        }
+
+        if(strcmp(token,";") == 0){
+            process(";", in, outXML);
+        }
+    } else if(strcmp(token,";") == 0){
+        process(";", in, outXML);
+    }
+
+    fprintf(outXML, "</letStatement>\n");
+    printf("</letStatement>\n");
 }
+
 
 void compileIf(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
 	const char *className,const char *returnType){
