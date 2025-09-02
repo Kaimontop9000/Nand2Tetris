@@ -704,7 +704,7 @@ void compileWhile(FILE * in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTab
 	
 	fprintf(outXML, "</doStatement>\n");
 	printf("</doStatement>\n");
-}*/
+}
 
 void compileDo(FILE *in, FILE *outXML, FILE *outVM,
                SymbolTable *subroutineTable, SymbolTable *classTable,
@@ -727,15 +727,23 @@ void compileDo(FILE *in, FILE *outXML, FILE *outVM,
     int nArgs = 0;
     char fullName[256];
 
+
     if(strcmp(token,"(")==0){
         // simple subroutine call in current class
         strcpy(subroutineName, firstIdentifier);
         process("(", in, outXML);
-        nArgs = compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
+
+        // push object reference (this) for method
+        fprintf(outVM, "push pointer 0\n");
+        nArgs = 1;  // account for 'this'
+        nArgs += compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
         process(")", in, outXML);
+
+        // Full VM name: currentClass.methodName
         sprintf(fullName, "%s.%s", className, subroutineName);
     }
     else if(strcmp(token,".")==0){
+    	// Qualified call: <classOrVar>.<subroutine>
         process(".", in, outXML);
 
         strcpy(subroutineName, token);
@@ -745,6 +753,7 @@ void compileDo(FILE *in, FILE *outXML, FILE *outVM,
             printf("token read: %s\n", token);
         }
         process("(", in, outXML);
+
         nArgs = compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
         process(")", in, outXML);
 
@@ -787,7 +796,101 @@ void compileDo(FILE *in, FILE *outXML, FILE *outVM,
 
     fprintf(outXML, "</doStatement>\n");
     printf("</doStatement>\n");
+}*/ 
+void compileDo(FILE *in, FILE *outXML, FILE *outVM,
+               SymbolTable *subroutineTable, SymbolTable *classTable,
+               const char *className) {
+
+    fprintf(outXML, "<doStatement>\n");
+    printf("<doStatement>\n");
+
+    process("do", in, outXML);
+
+    // --- first identifier: could be subroutine, class, or variable ---
+    char firstIdentifier[128];
+    strcpy(firstIdentifier, token);
+    fprintf(outXML, "<identifier> %s </identifier>\n", token);
+
+    if(hasMoreTokens(in) && advance(in, token, &stringFlag)){
+        printf("token read: %s\n", token);
+    }
+
+    char subroutineName[128];
+    int nArgs = 0;
+    char fullName[256];
+
+    if(strcmp(token,"(")==0){
+        // --- method call in current class (e.g., do draw(...)) ---
+        strcpy(subroutineName, firstIdentifier);
+        process("(", in, outXML);
+
+        // push object reference (this) for method
+        fprintf(outVM, "push pointer 0\n");
+        nArgs = 1;  // account for 'this'
+
+        nArgs += compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
+        process(")", in, outXML);
+
+        sprintf(fullName, "%s.%s", className, subroutineName);
+    }
+    else if(strcmp(token,".")==0){
+        // --- method call on an object or class ---
+        process(".", in, outXML);
+
+        strcpy(subroutineName, token);
+        fprintf(outXML, "<identifier> %s </identifier>\n", token);
+
+        if(hasMoreTokens(in) && advance(in, token, &stringFlag)){
+            printf("token read: %s\n", token);
+        }
+
+        process("(", in, outXML);
+
+        // Check if firstIdentifier is a variable
+        Kind k = kindOf(subroutineTable, firstIdentifier);
+        int idx = indexOf(subroutineTable, firstIdentifier);
+        if(k == KIND_NONE){
+            k = kindOf(classTable, firstIdentifier);
+            idx = indexOf(classTable, firstIdentifier);
+        }
+
+        if(k != KIND_NONE){
+            // --- instance method: push object reference ---
+            const char *segment =
+                (k == KIND_VAR ? "local" :
+                 k == KIND_ARG ? "argument" :
+                 k == KIND_FIELD ? "this" :
+                 k == KIND_STATIC ? "static" : "pointer");
+
+            fprintf(outVM, "push %s %d\n", segment, idx);
+            nArgs = 1; // account for 'this'
+
+            nArgs += compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
+
+            // full name uses type of the variable
+            const char *type = typeOf(subroutineTable, firstIdentifier);
+            if(type == NULL) type = typeOf(classTable, firstIdentifier);
+            sprintf(fullName, "%s.%s", type, subroutineName);
+        } else {
+            // --- class method or constructor ---
+            nArgs = compileExpressionList(in, outXML, outVM, subroutineTable, classTable, className);
+            sprintf(fullName, "%s.%s", firstIdentifier, subroutineName);
+        }
+
+        process(")", in, outXML);
+    }
+
+    printf("\n\nDEBUG: compileDo issuing call to %s with %d args\n\n", fullName, nArgs);
+    writeCall(outVM, fullName, nArgs);
+    process(";", in, outXML);
+
+    // discard return value
+    writePop(outVM, "temp", 0);
+
+    fprintf(outXML, "</doStatement>\n");
+    printf("</doStatement>\n");
 }
+
 
 void compileReturn(FILE * in, FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
 	const char *className, const char *returnType){
@@ -1139,7 +1242,7 @@ const char *returnType){
 	    fprintf(outVM, "call Memory.alloc 1\n");
 	    fprintf(outVM, "pop pointer 0\n");
 	}    
-	
+
     // --- Initialize locals to 0 (VM spec §8.5) ---
     for (int i = 0; i < nLocals; i++) {           
         fprintf(outVM, "push constant 0\n");      
