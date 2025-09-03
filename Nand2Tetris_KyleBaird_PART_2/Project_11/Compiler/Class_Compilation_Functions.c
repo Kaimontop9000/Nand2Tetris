@@ -231,7 +231,29 @@ void compileTerm(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutineTable
     			printf("token read: %s\n",token );
 			}
 			process("[", in, outXML);
+			
+			// compile index expression first
 			compileExpression(in,outXML,outVM, subroutineTable, classTable,className);
+
+			// push base address of array
+		    Kind k = kindOf(subroutineTable, identifier);
+		    int idx = indexOf(subroutineTable, identifier);
+		    if (k == KIND_NONE) {
+		        k = kindOf(classTable, identifier);
+		        idx = indexOf(classTable, identifier);
+		    }
+
+		    if (k == KIND_VAR) fprintf(outVM, "push local %d\n", idx);
+		    else if (k == KIND_ARG) fprintf(outVM, "push argument %d\n", idx);
+		    else if (k == KIND_STATIC) fprintf(outVM, "push static %d\n", idx);
+		    else if (k == KIND_FIELD) fprintf(outVM, "push this %d\n", idx);
+
+		    // compute effective address
+		    fprintf(outVM, "add\n");
+
+		    // get value at a[i]
+		    fprintf(outVM, "pop pointer 1\n");  // THAT points to a[i]
+		    fprintf(outVM, "push that 0\n");    // push value of a[i] onto stack
 			process("]", in, outXML);
 			fprintf(outXML, "</term>\n");
 			return;
@@ -552,7 +574,8 @@ void compileExpression(FILE *in, FILE *outXML,FILE *outVM,SymbolTable *subroutin
 
 	fprintf(outXML, "</letStatement>\n");
 	printf("</letStatement>\n");
-}*/
+}*/ 
+
 void compileLet(FILE *in, FILE *outXML, FILE *outVM,
                 SymbolTable *subroutineTable, SymbolTable *classTable,
                 const char *className) {
@@ -597,6 +620,10 @@ void compileLet(FILE *in, FILE *outXML, FILE *outVM,
         isArray = 1;
         process("[", in, outXML);
 
+        // --- push index expression ---
+        // STACK: [arr_base, index]
+        compileExpression(in, outXML, outVM, subroutineTable, classTable, className);
+        
         // --- push base address of array ---
         // STACK: [arr_base]
         if (k == KIND_VAR) fprintf(outVM, "push local %d\n", idx);
@@ -604,9 +631,6 @@ void compileLet(FILE *in, FILE *outXML, FILE *outVM,
         else if (k == KIND_STATIC) fprintf(outVM, "push static %d\n", idx);
         else if (k == KIND_FIELD) fprintf(outVM, "push this %d\n", idx);
 
-        // --- push index expression ---
-        // STACK: [arr_base, index]
-        compileExpression(in, outXML, outVM, subroutineTable, classTable, className);
 
         // --- add to get target address ---
         // STACK: [arr_base + index]
@@ -653,6 +677,7 @@ void compileLet(FILE *in, FILE *outXML, FILE *outVM,
     fprintf(outXML, "</letStatement>\n");
     printf("</letStatement>\n");
 }
+
 
 
 void compileIf(FILE *in,FILE *outXML,FILE *outVM, SymbolTable *subroutineTable, SymbolTable *classTable,
