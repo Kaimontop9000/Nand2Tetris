@@ -1169,6 +1169,7 @@ void compileParamaterList(FILE *in, FILE *outXML,SymbolTable *subroutineTable){
 	fprintf(outXML, "</parameterList>\n");
 	printf("</parameterList>\n");
 }
+
 void compileVarDec(FILE *in, FILE *outXML, SymbolTable *subroutineTable){
 
 	fprintf(outXML, "<varDec>\n");
@@ -1435,6 +1436,13 @@ void compileSubroutineDec(FILE *in, FILE *outXML, FILE *outVM, SymbolTable *clas
 
 	// Parameter list
 	process( "(" , in, outXML);
+
+	// --- Seed implicit "this" for methods ---
+    if (strcmp(subroutineKind, "method") == 0) {
+        // Treat it as an argument at index 0
+        define(&subroutineTable, "this", className, KIND_ARG);
+    }
+
 	compileParamaterList(in, outXML,&subroutineTable);
 	process( ")" , in, outXML);
 	
