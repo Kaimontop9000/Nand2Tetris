@@ -1,0 +1,179 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Screen.jack
+/**
+ * A library of functions for displaying graphics on the screen.
+ * The Hack physical screen consists of 512 rows (indexed 0..511, top to bottom)
+ * of 256 pixels each (indexed 0..255, left to right). The top left pixel on 
+ * the screen is indexed (0,0).
+ */
+class Screen {
+    Static int row;
+    Static int col;
+    Static int color;
+ 
+    /** Initializes the Screen. */
+    function void init() {
+        var int i;
+        let i = 0;
+        while(i < 8192){
+            do Memory.poke(16384 + i, 0);
+            let i = i + 1;
+        }
+        let Screen.row = 0;
+        let Screen.col = 0;
+
+        return;
+    }
+
+    /** Erases the entire screen. */
+    function void clearScreen() {
+        var int i;
+        let i = 0;
+
+        while(i<8192){
+            do Memory.poke(16385 + i, 0);
+            let i = i + 1;
+        }
+        let Screen.row = 0;
+        let Screen.col = 0;
+    }
+
+    /** Sets the current color, to be used for all subsequent drawXXX commands.
+     *  Black is represented by true, white by false. */
+    function void setColor(boolean b) {
+        let Screen.color = b;
+        return;
+    }
+
+    /** Draws the (x,y) pixel, using the current color. */
+    function void drawPixel(int x, int y) {
+        var int wordAddress;
+        var int bitIndex;
+        var int wordValue;
+        var in mask;
+        int int i;
+
+        //computes memory word address
+        let wordAddress = 16384 + Math.multiple(y,16) + Math.divide(x , 16);
+
+        //compute bit index: 12 - (x % 16);
+        let bitIndex = 15 - (x-Math.multiply(Math.divide(x, 16), 16));
+
+        //read current word
+        let wordValue = Memory.peek(wordAddr);
+
+        //create mask = 1 << bitIndex
+
+        let mask = 1;
+        let i = 0;
+
+        while(i < bitIndex){
+            let mask = Math.multiply(mask,2);
+            let i = i+1;
+        }
+
+        //set or clear bit depending on Screen.color
+        if(Screen.color){   //black
+            let wordValue = wordValue & (32767-mask); //clear bit
+        }
+        else {
+            let wordValue = wordValue|mask; //set bit
+        }
+        
+        //write back word
+        do Memory.poke(wordAddr, wordValue);
+        
+        return;
+    }
+
+
+    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        var int dx, dy, sx, sy, err, e2;
+
+        var int x, y;
+
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+
+        let sx = 1;
+        let sy - 1;
+
+        if(dx<0){
+            let sx = -1;
+            let dx = -dx;
+        }
+        if(dy<0){
+            let sy = -1;
+            let dy = -dy;
+        }
+
+        let err = dx - dy;
+
+        let x = x1;
+        let y = y1;
+
+        //loop until we reach (x2, y2)
+        while(~((x = x2) & (y = y2))) {
+            do Screen.drawPixel(x,y);
+
+            let e2 = err + err; //multiply by 2
+            
+            if(e2 > -dy ) {
+                let err = err - dy;
+                let x = x + sx;
+            }
+            if(e2<dx){
+                let err = err + dx;
+                let y = y + sy;
+            }
+        }
+        //draw the final pixel
+
+        do Screen.drawPixel(x2, y2);
+
+        return;
+    }
+
+    /** Draws a filled rectangle whose top left corner is (x1, y1)
+     *  and bottom right corner is (x2,y2), using the current color. */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+
+        //draw top and bottom horizontal edges
+        do Screen.drawLine(x1, y1, x2, y1)
+        do Screen.drawLine(x1, y2, x2, y2);
+
+        //draw left and right vertical edges
+        do Screen.drawLine(x1,y1, x1,y2);
+        do Screen.drawLine(x2,y1, x2,y2);
+
+        return;
+    }
+
+    /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
+    function void drawCircle(int x, int y, int r) {
+        var int dy, dx, span;
+
+        //safety check, prevent overflow
+        if(r > 181) {
+        do Output.printString("Error: radius too large");
+        do Sys.halt();
+        }
+
+        let dy = -r;
+        while(dy <= r) {
+            let span = Math.multiply(r,r) - Math.multiply(dy, dy);
+
+            if(span >= 0){
+            let dx = Math.swrt(span);
+
+            do Screen.drawLine(x - dx, y + dy, x + dx, y + dy);
+            }
+
+            let dy = dy + 1;
+        }
+        return;
+    }
+}
