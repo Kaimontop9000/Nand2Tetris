@@ -17,12 +17,8 @@ class Screen {
     function void init() {
         var int i;
         let i = 0;
-        while(i < 8192){
-            do Memory.poke(16384 + i, 0);
-            let i = i + 1;
-        }
-        let row = 0;
-        let col = 0;
+        
+        do Screen.clearScreen();
 
         return;
     }
@@ -36,8 +32,10 @@ class Screen {
             do Memory.poke(16385 + i, 0);
             let i = i + 1;
         }
+
         let row = 0;
         let col = 0;
+    
 
         return;
     }

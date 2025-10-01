@@ -17,22 +17,13 @@ class Array {
     /** Constructs a new Array of the given size. */
     function Array new(int size) {
 
-        var int addr;
-
-        // allocate memory block of given size
-        let addr = Memory.alloc(size);
-
-        // store the base address in this array object
-        let base = addr;
-
-        return this;  // return the array object
+        return Memory.alloc(size);
     }
 
     /** Disposes this array. */
     method void dispose() {
 
-        do Memory.deAlloc(base);  // free the memory
-        let base = 0;             // clear the pointer
+        do Memory.deAlloc(this);
         return;
     }
 }
