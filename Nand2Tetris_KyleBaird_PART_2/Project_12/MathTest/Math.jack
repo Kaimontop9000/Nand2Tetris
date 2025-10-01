@@ -60,7 +60,7 @@ class Math {
         }
 
         // Recursive call: divide x by 2*y
-        let q = divide(x, y + y); // 2*y
+        let q = Math.divide(x, y + y); // 2*y
 
         // Check if we can add one more y to the quotient
         if ((x - 2 * q * y) < y) {
@@ -74,6 +74,7 @@ class Math {
     function int sqrt(int x) {
         var int y;
         var int j;
+        var int k;
         var int bit;
         var int test;
 
@@ -81,10 +82,10 @@ class Math {
 
         let j = 7; // start from 2^(16/2-1) = 2^7 = 128
 
-        while (j >= 0) {
+        while (j > -1){
             // compute 2^j using multiplication
             let bit = 1;
-            var int k;
+            
             let k = 0;
             while (k < j) {
                 let bit = Math.multiply(bit, 2);
@@ -94,7 +95,7 @@ class Math {
             // test = (y + bit)^2
             let test = Math.multiply(y + bit, y + bit);
 
-            if (test <= x) {
+            if ((test < x) | (test = x)) {
                 let y = y + bit;
             }
 

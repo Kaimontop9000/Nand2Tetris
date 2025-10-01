@@ -49,13 +49,13 @@ class Keyboard {
         var char c;
 
         // 1. Wait for a key to be pressed
-        let c = keyPressed();          // read current key
+        let c = Keyboard.keyPressed();          // read current key
         while (c = 0) {                // while no key is pressed
-            let c = keyPressed();      // keep polling
+            let c = Keyboard.keyPressed();      // keep polling
         }
 
-        // 2. Wait for key release
-        while (keyPressed() != 0) {
+        // 2. Wait for key released
+        while (Keyboard.keyPressed() > 0) {
             // just spin until key is released
         }
 
@@ -87,19 +87,20 @@ class Keyboard {
             let c = Keyboard.readChar(); // wait for key press
 
             // 3a. Stop reading on newline
-            if (c = String.newline()) {
+            if (c = String.newLine()) {
                 let done = true;
-            } 
-            else if (c = String.backspace()) { // 3b. Handle backspace
-                if (input.length() > 0) {
-                    do input.eraseLastChar(); // remove last char from buffer
-                    do Output.backSpace();    // erase last char on screen
+            } else {
+                if (c = String.backSpace()) {   // 3b. Handle backspace
+                    if (input.length() > 0) {
+                        do input.eraseLastChar(); // remove last char from buffer
+                        do Output.backSpace();    // erase last char on screen
+                    }
+                } else {                        // 3c/3d. Append and echo character
+                    do input.appendChar(c);
+                    do Output.printChar(c);
                 }
-            } 
-            else { // 3c/3d. Append and echo character
-                do input.appendChar(c);
-                do Output.printChar(c);
-            }
+}
+
         }
 
         // 4. Return the complete input string
@@ -126,25 +127,25 @@ class Keyboard {
         while (~done) {
             let c = Keyboard.readChar(); // wait for key press
 
-            // 3a. Stop on newline
-            if (c = String.newline()) {
+           // 3a. Stop on newline
+            if (c = String.newLine()) {
                 let done = true;
-            } 
-            // 3b. Handle backspace
-            else if (c = String.backspace()) {
-                // remove last digit
-                let value = value / 10;  // integer division
-                do Output.backSpace();   // erase char from screen
-            } 
-            // 3c. Append numeric digits
-            else {
-                // check if c is '0'..'9'
-                if ((c >= 48) & (c <= 57)) {
-                    // multiply accumulated value by 10, add new digit
-                    let value = value * 10 + (c - 48);
-                    do Output.printChar(c); // echo digit
+            } else {
+                // 3b. Handle backSpace
+                if (c = String.backSpace()) {
+                    // remove last digit
+                    let value = value / 10;  // integer division
+                    do Output.backSpace();   // erase char from screen
+                } else {
+                    // 3c. Append numeric digits
+                    // check if c is '0'..'9'
+                    if ((c > 47) & (c < 58)) {
+                        // multiply accumulated value by 10, add new digit
+                        let value = value * 10 + (c - 48);
+                        do Output.printChar(c); // echo digit
+                    }
+                    // ignore any non-digit characters
                 }
-                // ignore any non-digit characters
             }
         }
 

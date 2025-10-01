@@ -18,30 +18,31 @@ class String {
      *  and initial length of 0. */
     constructor String new(int maximumLength) {
         var Array charArray;
-        let this = Memory.alloc(3);
+
         let length = 0;
         let maxLength = maximumLength;
+
         let charArray = Array.new(maxLength);
         let chars = charArray;
-        return this;
+
+        return this; // 'this' is implicitly the object being constructed
     }
 
     /** Disposes this string. */
     method void dispose() {
-
-        do Memory.dispose(chars);
-        do Memory.dispose(this);
+        do Memory.deAlloc(chars); // free the internal array
+        let chars = 0;            // optional: clear the field
         return;
     }
 
     /** Returns the current length of this string. */
     method int length() {
-        return this[0];
+        return Memory.peek(base); 
     }
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
-        if((j < 0 ) | (j<=Length)){
+        if ((j < 0) | (j = Length() | j < Length())){
             do Output.printString("String index out of bounds");
             do Sys.halt();
             return 0;
@@ -51,7 +52,7 @@ class String {
 
     /** Sets the character at the j-th location of this string to c. */
     method void setCharAt(int j, char c) {
-        if((j < 0 ) | (j<=Length)){
+        if ((j < 0) | (j = Length() | j < Length())){
             do Output.printString("String index out of bounds");
             do Sys.halt();
             return;
@@ -92,7 +93,7 @@ class String {
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
-        war int i, value, digit;
+        var int i, value, digit;
         let i = 0;
         let value = 0;
 
@@ -111,8 +112,7 @@ class String {
     method void setInt(int val) {
         var char c;
 
-        let c = (val-Math.multiply(Math.divide(val,10)10)) + 48;
-
+        let c = (val - Math.multiply(Math.divide(val, 10), 10)) + 48;
         if(val < 10){
             do this.appendChar(c);
         }

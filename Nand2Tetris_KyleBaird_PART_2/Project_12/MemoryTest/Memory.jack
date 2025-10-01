@@ -17,17 +17,29 @@ class Memory {
     
     /** Initializes the class. */
     function void init() {
-       
+
         // Initialize the screen driver (clear screen, set cursor, etc.)
         do Screen.init();
 
         // Initialize the keyboard driver (prepare for input)
         do Keyboard.init();
 
-        let memory = 0;           // RAM starts at 0
+        // Set up RAM proxy
+        let memory = Array.new(32768);          // Jack Array representing RAM
+
+        // Define heap range
         let HEAP_BASE = 2048;     // heap begins at RAM[2048]
-        let HEAP_END = 8192;      // RAM ends at RAM[8191]
+        let HEAP_END  = 16383;    
+
+        // Initialize free list to point to first free block
         let freeList = HEAP_BASE;
+
+        // Initialize first free block
+        // RAM[HEAP_BASE] = size of block (total heap size)
+        do Memory.poke(HEAP_BASE, HEAP_END - HEAP_BASE);
+
+        // RAM[HEAP_BASE + 1] = next pointer (0 = end of free list)
+        do Memory.poke(HEAP_BASE + 1, 0);
 
         return;
     }
@@ -60,9 +72,9 @@ class Memory {
         let prev = 0;
 
         // iterate through free list to find first fit
-        while (~(block = 0)) {
-            let next = Memory.peek(block + 1);       // next pointer
+        while (block > 0) {
             let remaining = Memory.peek(block);      // block size
+            let next = Memory.peek(block + 1);       // next pointer
 
             if ((remaining - (size + 2)) > 0) {            // +2 for bookkeeping
                 // found a big enough block
@@ -74,8 +86,7 @@ class Memory {
                     } else {
                         do Memory.poke(prev + 1, next);
                     }
-                    let a = Array.new(size);
-                    return a;
+                    return block + 2; // start of usable memory
                 }
 
                 // split block
@@ -93,8 +104,7 @@ class Memory {
                     do Memory.poke(prev + 1, newBlock);
                 }
 
-                let a = Array.new(size);
-                return a;
+                return block + 2; // start of usable memory
             }
 
             // move to next block
@@ -103,10 +113,10 @@ class Memory {
         }
 
         // no block found
-        let a = Array.new(0);
-        return a;
+        return 0;
     }
     
+        
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
@@ -114,13 +124,14 @@ class Memory {
         var int block;
         var int oldHead;
 
-        let block = 0 - 2;               // adjust to start of block
+        // move back to start of block (size field)
+        let block = o - 2;
         let oldHead = freeList;
 
-        // insert block at head of free list
+        // link the block at the head of free list
         do Memory.poke(block + 1, oldHead);
         let freeList = block;
 
         return;
-    }    
+    }
 }

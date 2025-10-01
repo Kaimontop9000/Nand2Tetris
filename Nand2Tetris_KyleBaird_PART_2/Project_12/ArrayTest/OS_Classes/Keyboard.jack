@@ -1,0 +1,155 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Keyboard.jack
+/**
+ * A library for handling user input from the keyboard.
+ */
+class Keyboard {
+
+    /** Initializes the keyboard. */
+    function void init() {
+        return;
+    } 
+
+    /**
+     * Returns the character of the currently pressed key on the keyboard;
+     * if no key is currently pressed, returns 0.
+     *
+     * Recognizes all ASCII characters, as well as the following keys:
+     * new line = 128 = String.newline()
+     * backspace = 129 = String.backspace()
+     * left arrow = 130
+     * up arrow = 131
+     * right arrow = 132
+     * down arrow = 133
+     * home = 134
+     * End = 135
+     * page up = 136
+     * page down = 137
+     * insert = 138
+     * delete = 139
+     * ESC = 140
+     * F1 - F12 = 141 - 152
+     */
+    function char keyPressed() {
+        
+        var int code;
+
+        // Read the memory-mapped keyboard register
+        let code = Memory.peek(24576); // Keyboard address in Hack
+
+        return code; // returns 0 if no key pressed, else ASCII or special code
+    }
+
+    /**	Waits until a key is pressed on the keyboard and released,
+     *  then echoes the key to the screen, and returns the character 
+     *  of the pressed key. */
+    function char readChar() {
+        var char c;
+
+        // 1. Wait for a key to be pressed
+        let c = Keyboard.keyPressed();          // read current key
+        while (c = 0) {                // while no key is pressed
+            let c = Keyboard.keyPressed();      // keep polling
+        }
+
+        // 2. Wait for key released
+        while (Keyboard.keyPressed() > 0) {
+            // just spin until key is released
+        }
+
+        // 3. Echo the key to the screen
+        do Output.printChar(c);
+
+        // 4. Return the character
+        return c;
+    }
+
+    /**	Displays the message on the screen, reads from the keyboard the entered
+     *  text until a newline character is detected, echoes the text to the screen,
+     *  and returns its value. Also handles user backspaces. */
+    function String readLine(String message) {
+
+        var String input;
+        var char c;
+        var boolean done;
+
+        // 1. Display the prompt message
+        do Output.printString(message);
+
+        // 2. Create input buffer
+        let input = String.new(128); // max size 128 chars
+
+        // 3. Read characters until Enter is pressed
+        let done = false;
+        while (~done) {
+            let c = Keyboard.readChar(); // wait for key press
+
+            // 3a. Stop reading on newline
+            if (c = String.newLine()) {
+                let done = true;
+            } else {
+                if (c = String.backSpace()) {   // 3b. Handle backspace
+                    if (input.length() > 0) {
+                        do input.eraseLastChar(); // remove last char from buffer
+                        do Output.backSpace();    // erase last char on screen
+                    }
+                } else {                        // 3c/3d. Append and echo character
+                    do input.appendChar(c);
+                    do Output.printChar(c);
+                }
+}
+
+        }
+
+        // 4. Return the complete input string
+        return input;
+    }
+
+    /** Displays the message on the screen, reads from the keyboard the entered
+     *  text until a newline character is detected, echoes the text to the screen,
+     *  and returns its integer value (until the first non-digit character in the
+     *  entered text is detected). Also handles user backspaces. */
+    function int readInt(String message) {
+         var char c;
+        var int value;
+        var boolean done;
+
+        // 1. Display prompt
+        do Output.printString(message);
+
+        // 2. Initialize value accumulator
+        let value = 0;
+        let done = false;
+
+        // 3. Read characters until newline
+        while (~done) {
+            let c = Keyboard.readChar(); // wait for key press
+
+           // 3a. Stop on newline
+            if (c = String.newLine()) {
+                let done = true;
+            } else {
+                // 3b. Handle backSpace
+                if (c = String.backSpace()) {
+                    // remove last digit
+                    let value = value / 10;  // integer division
+                    do Output.backSpace();   // erase char from screen
+                } else {
+                    // 3c. Append numeric digits
+                    // check if c is '0'..'9'
+                    if ((c > 47) & (c < 58)) {
+                        // multiply accumulated value by 10, add new digit
+                        let value = value * 10 + (c - 48);
+                        do Output.printChar(c); // echo digit
+                    }
+                    // ignore any non-digit characters
+                }
+            }
+        }
+
+        // 4. Return the accumulated integer
+        return value;
+    }
+}
