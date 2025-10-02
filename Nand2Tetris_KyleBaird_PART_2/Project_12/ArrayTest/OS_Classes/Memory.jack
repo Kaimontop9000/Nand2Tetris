@@ -8,112 +8,117 @@
  * consists of 32,768 words, each holding a 16-bit binary number.
  */
  class Memory {
-    static Array ram;
+
+    /** Memory array */
+    static Array memory;
+
+    /** Heap memory array and */
     static Array heap;
+
+    /** List of available memory segments */
     static Array freeList;
+
+    /** Heap base address */
+    static int heapBase;
+
+    /** Max heap length */
+    static int heapLength;
+
+    /** Number of free segments */
+    /* static int nSegments; */
 
     /** Initializes the class. */
     function void init() {
-        let ram = 0;
-        let heap = 2048;
-        let freeList = heap;
-        let freeList[0] = 0;     // next
-        let freeList[1] = 14334; // length
+        var Array segment;
+
+        let memory = 0;
+        let heapBase = 2048;
+        let heapLength = 16384 - heapBase;
+        let heap = heapBase;
+
+        // Make freeList one large segment
+        /* let nSegments = 1; */
+        let segment = heap;
+        let segment[0] = heapLength;  // segment size
+        let segment[1] = null;        // pointer to the next segment (null)
+
+        let freeList = segment;
+
         return;
     }
 
     /** Returns the RAM value at the given address. */
     function int peek(int address) {
-        return ram[address];
+        return memory[address];
     }
 
     /** Sets the RAM value at the given address to the given value. */
     function void poke(int address, int value) {
-        let ram[address] = value;
+        let memory[address] = value;
         return;
     }
 
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function Array alloc(int size) {
-        var Array previousBlock;
-        var Array currentBlock;
-        var Array resultBlock;
-        var int currentBlockSize;
-        var int remainingSize;
-        var int currentBlockNext;
+        var Array segment, selected_segment, block, prev_segment;
+        var int diff, min_diff;  // for the best-fit
+        var boolean found;
 
-        if (freeList = 0) {
-            return 0;
+        if (size < 0) {
+            do Sys.error(5);
         }
 
-        // XXX: I am not happy with having the whole code duplicated just because
-        // we have the "special case" that we select the first block.
+        if (size > (heapLength - 2)) {
+            do Sys.error(6);
+        }
 
-        // Using the first block is a special case, because we have to
-        // update freeList instead of simply taking the block out of the list
-        // by doing `let previousBlock.next = currentBlock.next`.
-        let currentBlockSize = freeList[1];
-        if (currentBlockSize > size) {
-            let remainingSize = currentBlockSize - size;
-            let resultBlock = freeList;
-            if (remainingSize < 4) {
-                // If remainingSize is smaller than 4 it does not make sense to split
-                // the block. Just return it as a whole.
-                let freeList = freeList[0]; // point to freeList.next
-            } else {
-                // If remainingSize is big enough we split the block. In that case
-                // we have to update the size of the block we return as well as
-                // the block (aka the remainder of the current block).
-                let resultBlock[1] = size;
-                let freeList = resultBlock + 2 + size;
-                let freeList[0] = resultBlock[0];
-                let freeList[1] = currentBlockSize - size - 2;
+        /* let found = false; */
+        let segment = freeList;
+        let selected_segment = segment;
+        let prev_segment = null;
+        let min_diff = segment[0] - size - 2;
+
+        // Find a free segment (best-fit)
+        while (~(segment[1] = null)) {
+            let diff = segment[0] - size - 2;
+            if ((diff > -1) & (diff < min_diff)) {
+                let min_diff = diff;
+                let selected_segment = segment;
+                /* let found = true; */
             }
-            return resultBlock + 2;
+            let prev_segment = segment;
+            let segment = segment[1];
         }
 
-        let previousBlock = freeList;
-        // The following excludes the first block which is what we want
-        // because we handled it separately before.
-        while (~(previousBlock[0] = 0)) {
-            let currentBlock = previousBlock[0];
-            let currentBlockSize = currentBlock[1];
-            if (currentBlockSize > size) {
-                let resultBlock = currentBlock;
-                let remainingSize = currentBlockSize - size;
-                if (remainingSize < 4) {
-                    let previousBlock[0] = resultBlock[0];
-                } else {
-                    let resultBlock[1] = size;
-                    let currentBlock = resultBlock + 2 + size;
-                    let currentBlock[0] = resultBlock[0];
-                    let currentBlock[1] = currentBlockSize - size - 2;
-                    let previousBlock[0] = currentBlock;
-                }
-                return resultBlock;
-            } else {
-                let previousBlock = currentBlock;
-            }
-        }
+        // Check whether a segment was found
+        /* if (prev_segment = null) {  // only 1 segment in freeList => always ok */
+        /*     let found = true;       // (checked in the beginning) */
+        /* } */
 
-        // Not enough heap available. Call defragment and try again.
-        return 0;
+        /* if (~(found)) { */
+        /*     do Sys.error(6);  // or attempt defragmentation */
+        /* } */
+
+        // block size
+        let selected_segment[min_diff+1] = size + 1;
+        // assign block
+        let block = selected_segment + selected_segment[0] - size;
+        // adjust original segment size
+        let selected_segment[0] = 1 + min_diff;
+
+        return block;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
-        var Array currentBlock;
-        if (freeList = 0) {
-            let freeList = o - 2;
-        }
-        let currentBlock = freeList;
-        while (~(currentBlock[0] = 0)) {
-            let currentBlock = currentBlock[0];
-        }
+        var Array segment;
 
-        let currentBlock[0] = o - 2;
+        let segment = o - 1;
+        let segment[1] = freeList;
+        let freeList = segment;
+
         return;
     }
 }

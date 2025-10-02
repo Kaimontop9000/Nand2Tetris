@@ -17,15 +17,19 @@ class Sys {
         do Output.init();
         do Keyboard.init();
         do Main.main();
+        
+        return;
     }
 
     /** Halts the program execution. */
     function void halt() {
         
-        Output.printString("Halted");
+        do Output.printString("Halted");
         
         while(true){
         }
+
+        return;
 
     }
 
@@ -38,6 +42,7 @@ class Sys {
             let counter = counter - 1;
         }
 
+        return;
     }
 
     /** Displays the given error code in the form "ERR<errorCode>",
@@ -49,6 +54,8 @@ class Sys {
         do Output.printString(">");
 
         do Sys.halt();
+
+        return;
 
     }
 }

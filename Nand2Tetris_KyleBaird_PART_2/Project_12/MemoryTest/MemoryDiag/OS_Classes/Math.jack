@@ -67,14 +67,6 @@ class Math {
         return sum;
     }
 
-    /** Returns j-th bit of x as true/false */
-    function boolean bit(int x, int j) {
-        if ((powOfTwo[j] & x) = 0) {
-            return false;
-        } else {
-            return true;
-        }
-    }
     /** Returns the integer part of x/y.
      *  When a Jack compiler detects the multiplication operator '/' in the
      *  program's code, it handles it by invoking this method. In other words,
@@ -159,6 +151,14 @@ class Math {
         }
     }
 
+    /** Returns j-th bit of x as true/false */
+    function boolean bit(int x, int j) {
+        if ((powOfTwo[j] & x) = 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
     /** Returns x modulo m */
     function int mod(int x, int m) {

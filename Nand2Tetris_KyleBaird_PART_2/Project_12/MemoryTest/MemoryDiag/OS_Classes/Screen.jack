@@ -9,20 +9,23 @@
  * the screen is indexed (0,0).
  */
 class Screen {
+
     static int row;
     static int col;
+
+    /** Color for drawXXX commands (black - true, white - false) */
     static int color;
+
+    /** Screen base address */
+    static Array screen;
+
  
     /** Initializes the Screen. */
     function void init() {
-        var int i;
-        let i = 0;
-        while(i < 8192){
-            do Memory.poke(16384 + i, 0);
-            let i = i + 1;
-        }
-        let row = 0;
-        let col = 0;
+        let color = true;  // default is black
+        let screen = 16384;
+        
+        do Screen.clearScreen();
 
         return;
     }
@@ -32,12 +35,14 @@ class Screen {
         var int i;
         let i = 0;
 
-        while(i<8192){
+        while(i < 8192){
             do Memory.poke(16385 + i, 0);
             let i = i + 1;
         }
+
         let row = 0;
         let col = 0;
+    
 
         return;
     }
@@ -179,12 +184,22 @@ class Screen {
         return;
     }
 
-     function int getCol() {
+    function int getRow() {
+        return row;
+    }
+
+    function void setRow(int r) {
+        let row = r;
+        return;
+    }
+
+    function int getCol() {
         return col;
     }
 
-     function int getRow() {
-        return row;
+    function void setCol(int c) {
+        let col = c;
+        return;
     }
 
 }

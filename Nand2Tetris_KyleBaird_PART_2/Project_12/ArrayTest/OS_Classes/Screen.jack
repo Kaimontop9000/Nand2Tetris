@@ -9,15 +9,22 @@
  * the screen is indexed (0,0).
  */
 class Screen {
+
     static int row;
     static int col;
-    static int color;
- 
+
+
+    /** Color for drawXXX commands (black - true, white - false) */
+    static boolean color;
+
+    /** Screen base address */
+    static Array screen;
+
     /** Initializes the Screen. */
     function void init() {
-        var int i;
-        let i = 0;
-        
+        let color = true;  // default is black
+        let screen = 16384;
+
         do Screen.clearScreen();
 
         return;
@@ -25,17 +32,14 @@ class Screen {
 
     /** Erases the entire screen. */
     function void clearScreen() {
-        var int i;
-        let i = 0;
+        var int w;
 
-        while(i<8192){
-            do Memory.poke(16385 + i, 0);
-            let i = i + 1;
+        let w = 0;
+
+        while (w < 8192) {
+            let screen[w] = 0;
+            let w = w + 1;
         }
-
-        let row = 0;
-        let col = 0;
-    
 
         return;
     }
@@ -49,131 +53,249 @@ class Screen {
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
-        var int wordAddress;
-        var int bitIndex;
-        var int wordValue;
-        var int mask;
-        var int i;
+        var int addr, pixel_mask;
 
-        //computes memory word address
-        let wordAddress = 16384 + Math.multiply(y,16) + Math.divide(x , 16);
-
-        //compute bit index: 12 - (x % 16);
-        let bitIndex = 15 - (x-Math.multiply(Math.divide(x, 16), 16));
-
-        //read current word
-        let wordValue = Memory.peek(wordAddress);
-
-        //create mask = 1 << bitIndex
-
-        let mask = 1;
-        let i = 0;
-
-        while(i < bitIndex){
-            let mask = Math.multiply(mask,2);
-            let i = i+1;
+        if ((x < 0) | (x > 511) | (y < 0) | (y > 255)) {
+            do Sys.error(7);
         }
 
-        //set or clear bit depending on Screen.color
-        if(color){   //black
-            let wordValue = wordValue & (32767-mask); //clear bit
+        let addr = (y*32) + (x/16);
+        let pixel_mask = Math.powOfTwo(Math.mod(x, 16));
+
+        if (color) {
+            let screen[addr] = screen[addr] | pixel_mask;
+        } else {
+            let screen[addr] = screen[addr] & (~pixel_mask);
         }
-        else {
-            let wordValue = wordValue|mask; //set bit
-        }
-        
-        //write back word
-        do Memory.poke(wordAddress, wordValue);
-        
+
         return;
     }
 
-
-    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
+    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current
+     *  color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
-        var int dx, dy, sx, sy, err, e2;
+        var int a, b, dx, dy, adyMinusbdx, pix_x, pix_y;
+        var boolean neg_dx, neg_dy;
 
-        var int x, y;
+        if ((x1 < 0) | (x1 > 511) | (y1 < 0) | (y1 > 255) |
+            (x2 < 0) | (x2 > 511) | (y2 < 0) | (y2 > 255))
+        {
+            do Sys.error(8);
+        }
 
         let dx = x2 - x1;
+        // Vertical line?
+        if (dx = 0) {
+            do Screen.drawLineVertical(x1, y1, y2);
+            return;
+        }
+
         let dy = y2 - y1;
+        // Horizontal line?
+        if (dy = 0) {
+            do Screen.drawLineHorizontal(x1, x2, y1);
+            return;
+        }
 
-        let sx = 1;
-        let sy = 1;
-
-        if(dx<0){
-            let sx = -1;
+        // Other lines
+        if (dx < 0) {
             let dx = -dx;
+            let neg_dx = true;
+        } else {
+            let neg_dx = false;
         }
-        if(dy<0){
-            let sy = -1;
+
+        if (dy < 0) {
             let dy = -dy;
+            let neg_dy = true;
+        } else {
+            let neg_dy = false;
         }
 
-        let err = dx - dy;
+        let a = 0;
+        let b = 0;
+        let adyMinusbdx = 0;
+        let pix_x = 0;
+        let pix_y = 0;
 
-        let x = x1;
-        let y = y1;
-
-        //loop until we reach (x2, y2)
-        while(~((x = x2) & (y = y2))) {
-            do Screen.drawPixel(x,y);
-
-            let e2 = err + err; //multiply by 2
-            
-            if(e2 > -dy ) {
-                let err = err - dy;
-                let x = x + sx;
+        while ((a < (dx+1)) & (b < (dy+1))) {  // (a <= dx) && (b <= dy)
+            if (neg_dx) {
+                let pix_x = x1 - a;
+            } else {
+                let pix_x = x1 + a;
             }
-            if(e2<dx){
-                let err = err + dx;
-                let y = y + sy;
+
+            if (neg_dy) {
+                let pix_y = y1 - b;
+            } else {
+                let pix_y = y1 + b;
+            }
+
+            do Screen.drawPixel(pix_x, pix_y);
+
+            if (adyMinusbdx < 0) {
+                let a = a + 1;
+                let adyMinusbdx = adyMinusbdx + dy;
+            } else {
+                let b = b + 1;
+                let adyMinusbdx = adyMinusbdx - dx;
             }
         }
-        //draw the final pixel
 
-        do Screen.drawPixel(x2, y2);
+        return;
+    }
+
+    /** Draw a horizontal line from (x1, y) to (x2, y). (Optimized) */
+    function void drawLineHorizontal(int x1, int x2, int y) {
+        var int tmp, addr, addr_last, modx, mask;
+
+        if ((x1 < 0) | (x1 > 511) |
+            (x2 < 0) | (x2 > 511) |
+            (y < 0)  | (y > 255))
+        {
+            do Sys.error(8);
+        }
+
+        // Ensure x1 is left of x2
+        if (x2 < x1) {
+            let tmp = x1;
+            let x1 = x2;
+            let x2 = tmp;
+        }
+
+        // First word
+        let addr = (y*32) + (x1/16);
+        let addr_last = (y*32) + (x2/16);
+        let modx = Math.mod(x1, 16);
+        let mask = -1;  // 0xffff
+        let tmp = 0;
+        while (tmp < modx) {
+            let mask = mask & (~Math.powOfTwo(tmp));  // first modx bits are 0
+            let tmp = tmp + 1;
+        }
+
+        // Middle words (only if line spreads at least over 2 words)
+        if (~(addr = addr_last)) {
+            if (color) {
+                let screen[addr] = screen[addr] | mask;
+            } else {
+                let screen[addr] = screen[addr] & (~mask);
+            }
+            let addr = addr + 1;
+            while (addr < addr_last) {
+                if (color) {
+                    let screen[addr] = -1;  // 0xffff
+                } else {
+                    let screen[addr] = 0;   // 0x0000
+                }
+                let addr = addr + 1;
+            }
+            let mask = -1;  // 0xffff
+        }
+
+        // Last word
+        let modx = Math.mod(x2, 16);
+        let tmp = 15;
+        while (tmp > modx) {
+            let mask = mask & (~Math.powOfTwo(tmp)); // last modx-1 bits = 0
+            let tmp = tmp - 1;
+        }
+
+        if (color) {
+            let screen[addr_last] = screen[addr_last] | mask;
+        } else {
+            let screen[addr_last] = screen[addr_last] & (~mask);
+        }
+
+        return;
+    }
+
+    /** Draw a vertical line from (x, y1) to (x, y2). (Optimized) */
+    function void drawLineVertical(int x, int y1, int y2) {
+        var int addr, height, tmp, mask;
+
+        if ((x < 0)  | (x > 511)  |
+            (y1 < 0) | (y1 > 255) |
+            (y2 < 0) | (y2 > 255))
+        {
+            do Sys.error(8);
+        }
+
+        // Ensure y1 is above y2
+        if (y2 < y1) {
+            let tmp = y1;
+            let y1 = y2;
+            let y2 = tmp;
+        }
+
+        let addr = (y1*32) + (x/16);
+        let height = y2 - y1;
+        let mask = Math.powOfTwo(Math.mod(x, 16));
+
+        let tmp = 0;
+        while (tmp < (height+1)) {  // Draw one pixel if y1 == y2
+            if (color) {
+                let screen[addr] = screen[addr] | mask;
+            } else {
+                let screen[addr] = screen[addr] & (~mask);
+            }
+            let tmp = tmp + 1;
+            let addr = addr + 32;
+        }
 
         return;
     }
 
     /** Draws a filled rectangle whose top left corner is (x1, y1)
-     *  and bottom right corner is (x2,y2), using the current color. */
+     * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
+        /* var int x; */
 
-        //draw top and bottom horizontal edges
-        do Screen.drawLine(x1, y1, x2, y1);
-        do Screen.drawLine(x1, y2, x2, y2);
+        if ((x2 < x1) | (y2 < y1)) {
+            do Sys.error(9);
+        }
 
-        //draw left and right vertical edges
-        do Screen.drawLine(x1,y1, x1,y2);
-        do Screen.drawLine(x2,y1, x2,y2);
+        while (y1 < (y2+1)) {
+            do Screen.drawLineHorizontal(x1, x2, y1);
+            let y1 = y1 + 1;
+        }
 
         return;
     }
 
-    /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
+    /** Draws a filled circle of radius r<=181 around (x,y), using the current
+     *  color. */
     function void drawCircle(int x, int y, int r) {
-        var int dy, dx, span;
+        var int dy, dx;
 
-        //safety check, prevent overflow
-        if(r > 181) {
-        do Output.printString("Error: radius too large");
-        do Sys.halt();
+        if (r > 181) {
+            do Sys.error(13);
         }
 
         let dy = -r;
-        while((dy < r)|(dy = r)) {
-            let span = Math.multiply(r,r) - Math.multiply(dy, dy);
 
-            if((span > 0) | (span = 0)) {
-            let dx = Math.sqrt(span);
-
-            do Screen.drawLine(x - dx, y + dy, x + dx, y + dy);
-            }
-
+        while (dy < r) {
+            let dx = Math.sqrt((r*r) - (dy*dy));
+            do Screen.drawLineHorizontal(x-dx, x+dx, y+dy);
             let dy = dy + 1;
         }
+
+        return;
+    }
+
+    /** Draw a character line by line at a memory address. `draw_mask`
+     *  specifies whether to draw LSB or MSB of the charMap. */
+    function void drawChar(int addr, int draw_mask, Array charMap) {
+        var int i;
+
+        let i = 0;
+        while (i < 11) {
+            let screen[addr] = screen[addr] & (~draw_mask); // clear char area
+            let screen[addr] = screen[addr] | (charMap[i] & draw_mask);
+            let addr = addr + 32;
+            let i = i + 1;
+        }
+
         return;
     }
 
@@ -194,5 +316,4 @@ class Screen {
         let col = c;
         return;
     }
-
 }
